@@ -1,0 +1,91 @@
+2005-09-01	Mark Hummel	
+
+	* initial conversion to automake/autoconf.
+
+2005-09-07	Mark Hummel
+
+	* beefed up configure scripts
+	* added lxt support
+	* added --enable-m32 configuration switch
+	* added --disable-lxt configuration switch
+	* fixed amd64 failures
+
+2005-09-08	Mark Hummel
+
+	* --disable-lxt switch disables check for libz
+	* removed version.h file 
+	* changed revision number to 2.8.0
+	* added --bindir switch
+	* added --libdir switch
+	* added --cflags switch
+	* added --libs switch
+	* added --includedir switch
+	* added --help switch
+	* added --version switch
+	* using libtool to create static and dynamic libraries
+
+2005-09-11	Mark Hummel
+
+	* using libtool to build both static and shared libraries
+	* added --ldflags switch
+	* fixed lexer bug with `xyz directives
+
+2005-09-15	Mark Hummel	
+	
+	* removed shell_* memory management routines	
+	* fixed segfaults when opening non-existant files
+	* allow $random arg to be hiearchical reference
+	* allow bit references to scalar variables
+
+2005-09-17	Mark Hummel
+
+	* added --enable-gprof configuration switch
+	* added --enable-all-static configuration switch
+	* changed --version and --help output to be work with help2man
+	* added man page
+	* bumped revision to 2.8.3
+
+2005-09-20	Mark Hummel	
+
+	* fixed parsers so they work with older versions of bision
+	* fixed vfscanf configuration check 
+	* changed revision number to 2.8.4
+
+2005-09-29	Mark Hummel
+	* added space and speed option keywords to lxt systasks
+
+2005-10-01	Mark Hummel
+	* added lxt2 support
+	* updated to latest lxt library code
+	* lxt 'space' option now uses bzip2 compression
+	* automatically build man page when help2man is available
+	* added --disable-lxt2 configure switch
+	* cleaned up build process a bit
+	* checking in bootstrapped files so CVS image can be built
+	  without automake/autoconf tools
+	* bumped revision to 2.8.5
+	* added libz and libbz2 replacement libraries
+
+2008-5-22	Mark Hummel
+	* Fixed bug 1716620: self referential wire assignment is not correctly evaluated
+	* Fixed bug 1716620: constant express arguments to primitives was not
+	  correctly propagated at time 0
+	* Note these bugs were previously fixed but not entered in Change Log
+		o 1593388: Veriwell fails to compile deep recursive macros
+		o 1591959: Veriwell gets seg fault for `include with no
+		+incdir
+	* Fixed initialization issue with UDPs and constant args
+
+2008-5-24	Mark Hummel	
+	* Fixed bug 1293467: force a reg with $random
+	* Don't reseed random number generator with time. 
+	* Change random number generator to alogrithm in spec.
+	* Fixed sysfunctions so the work correctly
+	* Added $dist_* system functions
+	* Bumped rev to 2.8.6
+	
+2009-1-6	Mark Hummel	
+	* Converged veriuser.h with version used by vrq
+	* Corrected --help text for $lxt2_recordvars and $lxt_recordvars
+	* Fixed bug in dumpvars that skipped initial timestamp in output file
+	* Bumped rev to 2.8.7
