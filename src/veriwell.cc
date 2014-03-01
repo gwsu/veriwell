@@ -57,7 +57,7 @@ void *zero_ptr = 0;		/* for monitoring 0000:0000 in debugger */
 tree dbg;			/* for debugging */
 tree dbg1;			/* for debugging */
 
-extern LibPath_t *ypathList;
+extern LibPath_t *ypathList_temp;
 
 char *versionString = VERSION;
 char copyright[] = "Copyright (C) 1993-2008 Elliot Mednick and Mark Hummel\n\n"
@@ -292,7 +292,7 @@ void runtime_error(tree node)
     input_filename = STMT_SOURCE_FILE(node);
     lineno = STMT_SOURCE_LINE(node);
 }
-
+
 
 /* Same as `malloc' but report error if no memory available.  */
 
@@ -578,8 +578,10 @@ void process_cmdline(char *input)
 	LibPath_t *libPath;
 	y_flag = 0;
 	libPath = (LibPath_t *) xmalloc(sizeof(LibPath_t));
-	libPath->next = ypathList;
-	ypathList = libPath;
+	//libPath->next = ypathList;
+	//ypathList = libPath;
+    ypathList_temp->next = libPath;
+    ypathList_temp = libPath;
 	libPath->path = (char *) xmalloc(strlen(input) + 1);
 	strcpy(libPath->path, input);
     } else if (extra_flag) {

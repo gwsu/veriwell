@@ -58,6 +58,7 @@ int key_enable = 1;
 int key_available = 0;
 
 LibPath_t *ypathList;
+LibPath_t *ypathList_temp;
 char *ylibext;
 char *incdir;
 
@@ -290,6 +291,7 @@ void init_io()
     ypathList = (LibPath_t *) malloc(sizeof(LibPath_t));
     ypathList->path = ".";
     ypathList->next = NULL;
+    ypathList_temp = ypathList;
 
     memset(&fin, 0, sizeof(fin));
     memset(&input_filename, 0, sizeof(input_filename));
