@@ -384,6 +384,29 @@ void pass3_decl(tree decl)
 /* A module wasn't found in the hierarchy; look for a library using the
    -y option and the +libext options if they are supplied */
 
+static tree module_lookup_by_name(char *name)
+{
+    tree t;
+
+    for (t = module_list; t; t = TREE_CHAIN(t)) {
+        if (!strcmp(name, (MODULE_NAME(TREE_PURPOSE(t))))) {
+            if (UDP_ATTR(TREE_PURPOSE(t))) {    /* this is a udp instantiation */
+                return (TREE_PURPOSE(t));
+            }
+
+            if (LIB_MODULE_ATTR(TREE_PURPOSE(t))) {
+            //if (list_length(INSTANCE_PORTS(instance)) !=
+            //    list_length(BLOCK_PORTS(TREE_PURPOSE(t))))
+                continue;
+            }
+            return (TREE_PURPOSE(t));
+        }
+    }
+
+    return NULL_TREE;
+}
+
+
 tree check_library(char *name)
 {
     char *ytmp;
@@ -452,8 +475,9 @@ tree check_library(char *name)
 
     parse_at_top_scope(current_scope);
 
-    module_list = nreverse(module_list);	/* put first mod first */
-    tmp_module = TREE_PURPOSE(module_list);	/* get first one */
+    //module_list = nreverse(module_list);	/* put first mod first */
+    //tmp_module = TREE_PURPOSE(module_list);	/* get first one */
+    tmp_module = module_lookup_by_name(name);
     module_list = chainon(tmp_module_list, module_list);	/* reassemble */
 
     fin = pop_stream();
