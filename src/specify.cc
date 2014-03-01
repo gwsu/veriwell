@@ -340,7 +340,8 @@ void insert_specify_paths(tree module)
 		    continue;
 		}
 		if (driver_count > 1) {
-		    error("net %s has more than one driver",
+		    warning
+            ("net %s has more than one driver",
 			  IDENT(out_ident), NULL_CHAR);
 		    return;
 		}
