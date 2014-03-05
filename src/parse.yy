@@ -1737,7 +1737,7 @@ xexpression
 
 seq_block
 	: BEGIN
-		{ $$ = build_stmt (BEGIN_STMT, stmt_lineno); }
+		{ $<ttype>$ = build_stmt (BEGIN_STMT, stmt_lineno); }
 	  statement_list END
 		{ STMT_BODY ($<ttype>2) = nreverse
 			(chainon (build_stmt (END_STMT, stmt_lineno), $3));
@@ -1753,7 +1753,7 @@ seq_block
 		  make_block_decl (check_block ($3), current_scope, tmp_tree);
 		  current_scope = tmp_tree;
 		  push_scope ();
-		  $$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno,
+		  $<ttype>$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno,
 			NULL_TREE, tmp_tree);
 		}
 	  block_declaration_list statement_list END
@@ -1768,7 +1768,7 @@ seq_block
 
 par_block
 	: FORK
-		{ $$ = build_stmt (FORK_STMT, stmt_lineno); }
+		{ $<ttype>$ = build_stmt (FORK_STMT, stmt_lineno); }
 	  statement_tree_list JOIN
 		{ STMT_BODY ($<ttype>2) = chainon  /* thread JOIN to BEGINNING */
 			(build_stmt (JOIN_STMT, stmt_lineno, NULL_TREE),
@@ -1784,7 +1784,7 @@ par_block
 		  make_block_decl (check_block ($3), current_scope, tmp_tree);
 		  current_scope = tmp_tree;
 		  push_scope ();
-		  $$ = build_stmt (FORK_NAMED_STMT, stmt_lineno,
+		  $<ttype>$ = build_stmt (FORK_NAMED_STMT, stmt_lineno,
 			NULL_TREE, tmp_tree);
 		}
 	  block_declaration_list statement_tree_list JOIN
