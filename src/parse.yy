@@ -1318,9 +1318,10 @@ xparameter_value_assignment
 		{ $$ = build_tree_list ($2, NULL_TREE); }
 	| '#' '(' constant_expression_clist ')'
 		{ $$ = nreverse ($3); }
+/*
 	| '#' '(' mintypmax_expression ')'
 		{ $$ = build_tree_list ($3, NULL_TREE); }
-	| '#' '(' mintypmax_expression ',' mintypmax_expression')'
+	| '#' '(' mintypmax_expression ',' mintypmax_expression ')'
 		{ $$ = build_tree_list ($5, NULL_TREE);
 		  $$ = tree_cons ($3, NULL_TREE, $$);
 		}
@@ -1329,12 +1330,13 @@ xparameter_value_assignment
 		  $$ = tree_cons ($5, NULL_TREE, $$);
 		  $$ = tree_cons ($3, NULL_TREE, $$);
 		}
+*/
 	;
 
 constant_expression_clist
-	: constant_expression
+	: mintypmax_expression
 		{ $$ = build_tree_list ($1, NULL_TREE); }
-	| constant_expression_clist ',' constant_expression
+	| constant_expression_clist ',' mintypmax_expression
 		{ $$ = tree_cons ($3, NULL_TREE, $1); }
 	;
 
@@ -2355,8 +2357,8 @@ constant_expression
 	;
 
 mintypmax_expression
-	: expression
-	| expression ':' expression ':' expression
+	: constant_expression
+	| constant_expression ':' constant_expression ':' constant_expression
 		{ switch (delay_type) {
 		    case (MIN_DELAY):  $$ = $1; break;
 		    case (TYP_DELAY):  $$ = $3; break;
@@ -2479,8 +2481,8 @@ primary
 		{ $$ = build_part_ref (check_rval_nocheck ($1), $3, $5); }
 	| concatenation
 	| function_call
-	| '(' mintypmax_expression rp
-		{ $$ = $2; }
+	//| '(' mintypmax_expression rp
+	//	{ $$ = $2; }
 	| '(' error rp
 		{ $$ = error_mark_node; }
 	;
