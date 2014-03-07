@@ -424,7 +424,7 @@ void init_parse()
 
 source_text
 	: statement	{ if (!is_interactive)
-			    YYFAIL;
+			error( "'module' or 'primitive' NOT found", NULL_CHAR, NULL_CHAR );
 #if VDEBUG != 0
 			  if (vdebug)
 			    printf_error_V ("interactive statement\n");
@@ -471,7 +471,7 @@ description
 module
 	: MODULE
 		{ if (is_interactive) {
-		    YYFAIL;
+			warning ( "Don't module in interactive mode", NULL_CHAR, NULL_CHAR );
                   }
 		}
 	  IDENTIFIER_or_OR
@@ -613,7 +613,7 @@ UDP
 UDP
 	: PRIMITIVE  
 		{ if (is_interactive) {
-		    YYFAIL;
+			warning ( "Don't primitive in interactive mode", NULL_CHAR, NULL_CHAR );
                   }
 		}
 	  IDENTIFIER
