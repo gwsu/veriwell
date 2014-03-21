@@ -1,0 +1,17 @@
+*.o
+*.lo
+*.la
+*.swp
+.deps
+.libs
+*.loT
+*.cache/
+libtool
+Makefile
+config.h
+config.log
+config.status
+stamp-h1
+src/build.h
+\[config.h\].in
+veriwell.exe
