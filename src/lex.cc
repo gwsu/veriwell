@@ -1332,14 +1332,14 @@ static int backslash(int c)
 
 /* Report syntax errors */
 
-void yyerror(char *s)
+void yyerror(char const *s)
 {
-//  char buf[200];
+    char buf[256];
 
-//  strcpy (buf, s);
+    strcpy (buf, s);
 //  strcat (buf, " before '%s'");
 //  error (s, token_buffer);
-    error(s, NULL_CHAR, NULL_CHAR);
+    error(buf, NULL_CHAR, NULL_CHAR);
 }
 
 void fix_lastchar(void)

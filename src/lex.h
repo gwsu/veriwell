@@ -28,7 +28,7 @@ int read_num_token(char *);
 void parse_base_const1(enum radii, char *, nbits_t, nbits_t, tree);
 void parse_base_const1g(enum radii, char *, nbits_t, nbits_t, Group *);
 int skip_white_space(int);
-void yyerror(char *);
+void yyerror(char const *);
 int prog_parse(void);		// this really belongs with the parser
 int IsReservedWord(char *, int);
 int convert_edge_digit(int c);
