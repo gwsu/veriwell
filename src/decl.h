@@ -46,4 +46,26 @@ tree make_tmp_decl(tree lval);
 void free_tmp_decl(tree tmp);
 
 
+struct port_node
+{
+    tree id;
+    struct port_node *next;
+};
+
+
+struct port_array_node
+{
+    int  in_or_out; // 0 in, 1 out, other inout
+    int  wire_or_reg; // 0 wire, other reg
+	int  is_bus; // 0 scalar, other bus
+    //union tree_node *range;
+    union tree_node range;
+    struct port_node *port;  // the last one by push
+    struct port_array_node *next;
+};
+
+struct port_node *add_port (struct port_node *head);
+struct port_array_node *add_port_array (struct port_array_node *head);
+int make_port_decl (struct port_array_node *head);
+
 #endif				// DECL_H

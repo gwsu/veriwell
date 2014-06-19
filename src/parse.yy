@@ -107,6 +107,10 @@ int in_instantiation = 0;
 /* If inside event statement, accept event types. */
 int in_event = 0;
 
+
+
+struct port_array_node  *port_decl_t;
+
 void init_parse()
 {
 	current_instance_module = NULL_TREE;
@@ -125,6 +129,7 @@ void init_parse()
 	current_delay = NULL_TREE;
 	interactive_statement = NULL_TREE;
 	tmp_tree = NULL_TREE;
+    port_decl_t = NULL;
 }
 
 %}
@@ -266,7 +271,10 @@ void init_parse()
 %type	<ttype>	module
 /* %type	<ttype>	module_item_list */
 /* %type	<ttype>	module_item */
-%type	<ttype>	list_of_ports_o
+%type	<ttype>	list_of_ports
+%type	<ttype>	list_of_port_declarations
+%type	<ttype>	list_of_port_array port_direction port_attribute
+%type	<ttype> list_of_port_identifier list_of_port_ident list_of_port_delimit
 %type	<ttype>	port_clist
 %type	<ttype>	port
 %type	<ttype>	port_expression_o
@@ -481,19 +489,24 @@ module
 		  /* list of parse modules */
 		  module_list = tree_cons (current_module, NULL_TREE, module_list);
 		  /* for now, assume all to be at lop level */
-//	       	  top_level = chainon (current_module, top_level);
+	      // top_level = chainon (current_module, top_level);
 		}
-	 list_of_ports_o sc
-		{ MODULE_PORT_LIST (current_module) = nreverse ($5); }
+	  list_of_ports sc
+		{ MODULE_PORT_LIST (current_module) = nreverse ($5);
+          
+          if ( port_decl_t )
+              make_port_decl (port_decl_t);
+        }
 	  module_item_list ENDMODULE
-		{ 
+		{
 		  current_scope = pop_scope (); 
 		  BLOCK_BODY (current_module) = nreverse (BLOCK_BODY (current_module));
 		  BLOCK_DECL (current_module) = nreverse (BLOCK_DECL (current_module));
 		  end_module (current_module);
+		  port_decl_t = NULL;
 		}
 
-/*	| MACROMODULE IDENTIFIER list_of_ports_o sc module_item_list ENDMODULE */
+/*	| MACROMODULE IDENTIFIER list_of_ports sc module_item_list ENDMODULE */
 	;
 
 module_item_list
@@ -503,13 +516,114 @@ module_item_list
 	| module_item_list error
 	;
 
-list_of_ports_o
-	: '(' port_clist rp
+list_of_ports
+	: '(' list_of_port_declarations
+		{ $$ = $2; }
+		//{ $$ = port_list_t; }
+	| '(' port_clist rp
 		{ $$ = $2; }
 	| /* empty */
 		{ $$ = NULL; }
 	;
 
+/* verilog-2001 */
+list_of_port_declarations
+	: list_of_port_array
+	| list_of_port_declarations list_of_port_array
+		{ $$ = chainon ($2, $1); }
+	| list_of_port_declarations ',' error
+	;
+
+list_of_port_array
+	: port_attribute list_of_port_identifier
+        { $$ = $2;
+        }
+	;
+
+
+port_direction
+    : INPUT
+        { port_decl_t = add_port_array (port_decl_t);
+          port_decl_t->in_or_out = 0;
+        }
+    | OUTPUT
+        { port_decl_t = add_port_array (port_decl_t);
+          port_decl_t->in_or_out = 1;
+        }
+    | INOUT
+        { port_decl_t = add_port_array (port_decl_t);
+          port_decl_t->in_or_out = 2;
+        }
+    ;
+
+
+port_attribute
+	: port_direction xrange
+        { port_decl_t->wire_or_reg = 0;
+          port_decl_t->port = NULL;
+
+          port_decl_t->is_bus = 1;
+		  if ( $2 == NULL_TREE )
+			port_decl_t->is_bus = 0;
+		  else
+			port_decl_t->range = *$2;
+        }
+	| port_direction NETTYPE xrange
+        { port_decl_t->wire_or_reg = 0;
+          port_decl_t->port = NULL;
+
+          port_decl_t->is_bus = 1;
+		  if ( $3 == NULL_TREE )
+			port_decl_t->is_bus = 0;
+		  else
+			port_decl_t->range = *$3;
+        }
+    | OUTPUT REG xrange
+        { port_decl_t = add_port_array (port_decl_t);
+          port_decl_t->in_or_out = 1;
+          port_decl_t->wire_or_reg = 1;
+          port_decl_t->port = NULL;
+
+          port_decl_t->is_bus = 1;
+		  if ( $3 == NULL_TREE )
+			port_decl_t->is_bus = 0;
+		  else
+			port_decl_t->range = *$3;
+        }
+    ;
+
+
+list_of_port_identifier
+    : list_of_port_ident
+    | list_of_port_identifier list_of_port_ident
+		{ yyerrok;
+		  $$ = chainon ($2, $1);
+		}
+    ;
+
+list_of_port_ident
+	: IDENTIFIER list_of_port_delimit
+	    { set_decl ($1, $1);  /* point to itself to mark as port */ 
+          $$ = build_tree_list ($1, NULL_TREE);
+
+          if ( port_decl_t )
+          {
+              port_decl_t->port = add_port (port_decl_t->port);
+              port_decl_t->port->id = $1;
+          }
+        }
+	| error
+	;
+
+list_of_port_delimit
+	: ','
+		{ yyerrok; }
+	| rp
+	| error
+	;
+
+
+/* verilog-1995 */
 port_clist
 	: port
 	| port_clist ',' port
@@ -623,7 +737,7 @@ UDP
 		  /* list of parse modules */
 		  module_list = tree_cons (current_module, NULL_TREE, module_list);
 		}
-	 list_of_ports_o sc
+	 list_of_ports sc
 		{ UDP_PORT_LIST (current_module) = nreverse ($5); }
 	  UDP_declarations UDP_initial_statement UDP_table_definition ENDPRIMITIVE
 		{
@@ -632,6 +746,7 @@ UDP
 		  end_primitive (current_module);
 		}
 	;
+
 UDP_declarations
 	: /* empty */
 	{ $$ = NULL_TREE; }
@@ -658,6 +773,7 @@ UDP_reg_statement
 		$$ = NULL_TREE;
 	}
 	;
+
 UDP_initial_statement
 	: /* NULL */
 	{ $$ = NULL_TREE; }
@@ -675,7 +791,6 @@ UDP_initial_statement
 		$$ = NULL_TREE;
 	}
 	; 
-	
 
 
 UDP_table_definition
@@ -929,7 +1044,7 @@ port_decl_identifiers
 
 reg_spec
 	: REG xrange
-		{ current_spec = make_reg_spec ($2); }
+		{ $$ = current_spec = make_reg_spec ($2); }
 	| INTEGER xrange
 		{ if (!$2)
 		    syn_warning ("Integer Range");

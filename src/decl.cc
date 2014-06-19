@@ -401,3 +401,123 @@ void init_decl()
     bit_one_node = NULL_TREE;
     error_mark_node = NULL_TREE;
 }
+
+/**************************************************************
+ *
+ * make_port_decl
+ *	- process port definition in 2001 format
+ *
+ **************************************************************
+ */
+
+struct port_node *add_port (struct port_node *head)
+{
+	struct port_node *p;
+
+	p = (struct port_node *) malloc ( sizeof (struct port_node) );
+	if ( p )
+    {
+		//printf("Memory allocated at: %x\n",p);
+        p->next = head;
+        p->id = NULL_TREE;
+    }
+	else
+		printf("Not Enough Memory in add_port()\n");
+
+    return p;
+}
+
+struct port_array_node *add_port_array (struct port_array_node *head)
+{
+	struct port_array_node *p;
+
+	p = (struct port_array_node *) malloc ( sizeof (struct port_array_node) );
+	if ( p )
+    {
+		//printf("Memory allocated at: %x\n",p);
+        p->next = head;
+        p->in_or_out = 0;
+        p->wire_or_reg = 0;
+        //p->range = NULL_TREE;
+        p->port = NULL;
+    }
+	else
+		printf("Not Enough Memory in add_array_node()\n");
+
+    return p;
+}
+
+
+int make_port_decl (struct port_array_node *head)
+{
+    int n = 0 ;
+
+    struct port_array_node *array, *arr_next;
+	struct port_node *p;
+    array = head;
+    p = array->port;
+
+    if ( head == NULL || p == NULL )
+    {
+		printf("Head is NULL in make_port_decl()\n");
+        return -1;
+    }
+
+    tree decl_t;
+    tree curr_spec_t;
+
+     while ( array )
+     {
+        if ( array->wire_or_reg == 1 )
+            curr_spec_t = ( array->is_bus == 0 ) ? 
+                          make_reg_spec ( NULL_TREE ) :
+                          make_reg_spec ( &(array->range) );
+        else
+            curr_spec_t = ( array->is_bus == 0 ) ?
+                          make_net_spec (default_net_type, NULL_TREE, NULL_TREE) :
+                          make_net_spec (default_net_type, &(array->range), NULL_TREE);
+
+        if ( array->in_or_out == 0 )
+            PORT_INPUT_ATTR (curr_spec_t) = 1;
+        else if ( array->in_or_out == 1 )
+            PORT_OUTPUT_ATTR (curr_spec_t) = 1;
+        else
+        {
+            PORT_INPUT_ATTR (curr_spec_t) = 1;
+            PORT_OUTPUT_ATTR (curr_spec_t) = 1;
+        }
+
+        //---------------------------------------------
+        // begin in each array
+
+        p = array->port;
+        array->port = p->next;
+		decl_t = make_decl (check_port (p->id), curr_spec_t, NULL_TREE, NULL_TREE);
+        //printf("Memory free at %x\n", p);
+        free (p);
+        n++;
+
+        while ( array->port )
+        {
+            p = array->port;
+            array->port = p->next;
+            decl_t = chainon (make_decl (check_port (p->id), curr_spec_t, NULL_TREE, NULL_TREE), decl_t);
+            //printf("Memory free at %x\n", p);
+            free (p);
+            n++;
+        }
+
+		BLOCK_PORTS (current_scope) =
+		    chainon (decl_t, BLOCK_PORTS (current_scope));
+
+        // end in each array
+        //---------------------------------------------
+
+        arr_next = array->next;
+        //printf("Memory free at %x\n", array);
+        free (array);
+        array = arr_next;
+	}
+
+	return n;
+}
