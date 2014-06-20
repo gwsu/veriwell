@@ -257,7 +257,7 @@ void module_timescale(tree module)
     if (timescale_global.any == T_NONE || timescale_global.any == T_NO) {
 	MODULE_TIME_UNIT(module) = 0;
 	MODULE_TIME_PREC(module) = 0;
-	timescale_global.any = T_NO;	/* no timescale; don't allow any now */
+	//timescale_global.any = T_NO;	/* no timescale; don't allow any now */
     } else {
 	MODULE_TIME_UNIT(module) = timescale_global.unit;
 	MODULE_TIME_PREC(module) = timescale_global.prec;
