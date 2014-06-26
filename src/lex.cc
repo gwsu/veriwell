@@ -1301,6 +1301,35 @@ int skip_white_space(int c)
 	    }
 	    break;
 
+	case '(':		/* synthesis comments */
+	    c = fin->fgetc();
+	    if (c == '*') {	/* Handle "(*" */
+		c1 = 0;
+		do {
+		    c = c1;
+		    switch (c1 = fin->fgetc()) {
+		    case '*':
+			if (c == '/')
+			    yyerror("/* found in syn-comment");
+			break;
+		    case '\n':
+			lineno++;
+			if (is_interactive)
+			    print_prompt();
+			break;
+		    case EOF:
+			yyerror("unterminated syn-comment block");
+			return (0);
+		    }
+		}
+		while (!(c == '*' && c1 == ')'));
+		c = fin->fgetc();
+	    } else {
+		fin->fungetc(c);
+		return '(';
+	    }
+	    break;
+
 	default:
 	    return c;
 	}
