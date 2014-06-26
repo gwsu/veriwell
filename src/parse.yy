@@ -378,7 +378,7 @@ void init_parse()
 %type	<ttype>	statement_tree_list
 %type	<ttype>	block_declaration_list
 %type	<ttype>	block_declaration
-%type	<ttype>	task_enable
+%type	<ttype>	task_enable task_enable_id_t
 %type	<ttype>	system_task_enable
 
 %type	<ttype>	lvalue
@@ -1954,8 +1954,13 @@ block_declaration
 	| static_declaration
 	;
 
+task_enable_id_t
+	: identifier
+    | identifier '(' rp
+    ;
+
 task_enable
-	: identifier sc
+	: task_enable_id_t sc
 		{ syn_warning ("task enable");
 		  function_error;
 		  $$ = build_stmt (TASK_STMT, lineno, IDENTIFIER_POINTER ($1), NULL_TREE);
