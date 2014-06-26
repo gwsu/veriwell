@@ -68,4 +68,15 @@ struct port_node *add_port (struct port_node *head);
 struct port_array_node *add_port_array (struct port_array_node *head);
 int make_port_decl (struct port_array_node *head);
 
+
+struct reg_node
+{
+    tree id;
+    tree value;
+    struct reg_node *next;
+};
+
+struct reg_node *add_reg (struct reg_node *head);
+int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, lineno_t line_no);
+
 #endif				// DECL_H

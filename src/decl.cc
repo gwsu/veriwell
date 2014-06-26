@@ -521,3 +521,65 @@ int make_port_decl (struct port_array_node *head)
 
 	return n;
 }
+
+
+/**************************************************************
+ *
+ * reg_init()
+ *	- process reg initialization in 2001 format
+ *
+ **************************************************************
+ */
+struct reg_node *add_reg (struct reg_node *head)
+{
+	struct reg_node *p;
+
+	p = (struct reg_node *) malloc ( sizeof (struct reg_node) );
+	if ( p )
+    {
+		//printf("Memory allocated at: %x\n",p);
+        p->next = head;
+        p->id = NULL_TREE;
+    }
+	else
+		printf("Not Enough Memory in add_reg()\n");
+
+    return p;
+}
+
+
+int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, lineno_t line_no)
+{
+    if ( head == NULL )
+    {
+		//printf("Head is NULL in reg_init()\n");
+        return -1;
+    }
+
+	struct reg_node *p, *pn;
+
+    p = head;
+
+    tree id_t;
+
+    while ( p )
+    {
+		id_t = check_lval (p->id, LVAL_REG, curr_spec);
+
+		id_t = build_stmt (ASSIGN_STMT, line_no, id_t,
+				implicit_conversion (id_t, p->value) );
+
+		id_t = build_stmt (INITIAL_BLOCK, line_no, id_t);
+        
+        BLOCK_BODY (curr_module) = tree_cons (id_t,
+			(tree)INITIAL_CODE, BLOCK_BODY (curr_module));
+
+        //printf("Memory free at %x\n", p);
+        pn = p->next;
+        free ( p );
+        p = pn;
+	}
+
+	return 0;
+}
+

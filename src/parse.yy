@@ -108,8 +108,8 @@ int in_instantiation = 0;
 int in_event = 0;
 
 
-
 struct port_array_node  *port_decl_t;
+struct reg_node *reg_init_t;
 
 void init_parse()
 {
@@ -130,6 +130,7 @@ void init_parse()
 	interactive_statement = NULL_TREE;
 	tmp_tree = NULL_TREE;
     port_decl_t = NULL;
+    reg_init_t = NULL;
 }
 
 %}
@@ -690,7 +691,9 @@ module_item
 	| net_declaration
 	{}
 	| static_declaration
-	{}
+        { make_reg_init (reg_init_t, current_module, current_spec, stmt_lineno);
+          reg_init_t = NULL;
+        }
 	| gate_declaration
 	| UDP_or_module_instantiation
 	{}
@@ -1235,6 +1238,12 @@ reg_decl_identifier
 		{ $$ = make_decl (check_reg ($1), current_spec, $3, $5);
 		  syn_warning ("REG/INTEGER arrays");
 		}
+	| IDENTIFIER '=' constant_expression
+		{ $$ = make_decl (check_reg ($1), current_spec, NULL_TREE, NULL_TREE);
+          reg_init_t = add_reg(reg_init_t);
+          reg_init_t->id = $1;
+          reg_init_t->value = $3;
+        }
 	;
 
 non_reg_decl_identifiers
