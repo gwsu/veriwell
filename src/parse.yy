@@ -388,7 +388,7 @@ void init_parse()
 %type	<ttype>	constant_expression
 %type	<ttype>	mintypmax_expression
 %type	<ttype>	mintypmax_expression_triplet
-%type	<ttype>	expression
+%type	<ttype>	expression expressing
 %type	<ttype>	primary
 %type	<ttype>	concatenation
 %type	<ttype>	function_call
@@ -2493,6 +2493,12 @@ mintypmax_expression_triplet
     ;
 
 expression
+    : expressing
+    | '(' expression rp
+      { $$ = $2; }
+    ;
+
+expressing
 	: primary
 	| '+' primary %prec UNARY
 		{ $$ = $2; }
