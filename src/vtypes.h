@@ -90,7 +90,7 @@ struct Time64 {
 #define PATHSEP "/"
 #define CLOCK_T
 
-#define VERIWELL "Veriwell"
+#define VERIWELL "Veriwell 3"
 
 /* Attempt to put all machine dependent types here */
 
