@@ -209,8 +209,24 @@ static int compiler_directive_or_macro(char *token)
 
 	read_macro_name();
 
-	if (!lookup_macro(token_buffer)) {
+	if (! lookup_macro(token_buffer) ) {
 	    if_disable_level = 1;	/* doesn't exist, eat until `else or `endif */
+	    for (yylex(&yyval); if_disable_level; yylex(&yyval));
+	}
+    }
+
+
+    else if (strcmp(token, "ifndef") == 0) {
+	if_nesting_level++;
+	if (if_disable_level) {
+	    if_disable_level++;
+	    return 1;
+	}
+
+	read_macro_name();
+
+	if ( lookup_macro(token_buffer) ) {
+	    if_disable_level = 1;	/* does exist, eat until `else or `endif */
 	    for (yylex(&yyval); if_disable_level; yylex(&yyval));
 	}
     }
