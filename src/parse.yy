@@ -1410,6 +1410,17 @@ UDP_or_module_instantiation
 		  current_instance_param = NULL_TREE;
 		  in_instantiation = 0;
 		}
+	| IDENTIFIER
+      '#' '(' constant_expression_clist rp
+		{ current_instance_module = $1;
+		  current_instance_param = nreverse ($4);
+		  in_instantiation = 1;
+		}
+	  module_instance_clist sc
+		{ current_instance_module = NULL_TREE;
+		  current_instance_param = NULL_TREE;
+		  in_instantiation = 0;
+		}
 
 	/* OR is a keyword, treat it seperately */
 /*	| OR xparameter_value_assignment
@@ -1438,10 +1449,12 @@ UDP_or_module_instantiation
 xparameter_value_assignment
 	: /* empty */
 		{ $$ = NULL; }
-	| '#' constant_expression
-		{ $$ = build_tree_list ($2, NULL_TREE); }
-	| '#' '(' constant_expression_clist ')'
-		{ $$ = nreverse ($3); }
+	| '#' '(' rp
+		{ $$ = NULL; }
+	//| '#' constant_expression
+	//	{ $$ = build_tree_list ($2, NULL_TREE); }
+	//| '#' '(' constant_expression_clist ')'
+	//	{ $$ = nreverse ($3); }
 /*
 	| '#' '(' mintypmax_expression ')'
 		{ $$ = build_tree_list ($3, NULL_TREE); }
@@ -1457,12 +1470,14 @@ xparameter_value_assignment
 */
 	;
 
+
 constant_expression_clist
 	: mintypmax_expression
 		{ $$ = build_tree_list ($1, NULL_TREE); }
 	| constant_expression_clist ',' mintypmax_expression
 		{ $$ = tree_cons ($3, NULL_TREE, $1); }
 	;
+
 
 /*
 UDP_instance_clist
