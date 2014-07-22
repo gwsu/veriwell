@@ -886,14 +886,65 @@ static void do_instantiation(tree node)
 	if (INSTANCE_PARAMS(t)) {
 	    tree decl, param_list = INSTANCE_PARAMS(t);
 
+        tree param_t = NULL_TREE;
+        tree inst;
+        int  miss;
+
+	    for (decl = BLOCK_DECL(instance); decl; decl = TREE_CHAIN(decl)) { // Definition Parameter
+		    if (TREE_CODE(decl) != PARAM_DECL)
+		        continue;
+
+            miss = 1;
+            for (inst = param_list; inst; inst = TREE_CHAIN(inst) ) { // Instansiation Parameter
+                if ( TREE_VALUE (inst) == NULL_TREE ) {
+                    miss = -1; // Position Parameter
+                    continue;
+                } else {
+                    if ( miss == -1 )
+                        error("Position parameter NOT mixed with Named parameter(%s) !\n",
+                              IDENT ( TREE_VALUE (inst) ), NULL_CHAR);
+
+                    if ( strcmp( IDENT ( DECL_NAME (decl) ), IDENT ( TREE_VALUE (inst) ) ) ==0 ) {
+                        param_t = chainon (build_tree_list (TREE_PURPOSE (inst), DECL_NAME(decl)), param_t);
+                        miss = 0; // Named Parameter
+                        break;
+                    }
+                }
+            }
+
+            if ( miss == -1 ) break;
+
+            if ( miss == 1 ) // Definition Parameter
+                param_t = chainon (build_tree_list (DECL_PARAM_RVAL(decl), DECL_NAME(decl)), param_t);
+        }
+
+        if ( miss >= 0 ) param_list = nreverse(param_t);
+
+        /*
+        for (param_t = param_list; param_t; param_t = TREE_CHAIN(param_t) ) {
+            if ( TREE_VALUE (param_t) != NULL_TREE )  // ID not NULL
+                printf ("debug-inst : %d = %s\n",
+                    TREE_OPERAND (TREE_PURPOSE (param_t), 0),
+                    IDENT ( TREE_VALUE (param_t) )
+                );
+	    }
+        */
+
 	    /* scan decl list for a parameter */
-	    for (decl = BLOCK_DECL(instance); decl;
-		 decl = TREE_CHAIN(decl)) {
-		if (TREE_CODE(decl) != PARAM_DECL)
-		    continue;
-		DECL_PARAM_REDIRECT(decl) = TREE_PURPOSE(param_list);
-		if ((param_list = TREE_CHAIN(param_list)) == 0)
-		    break;
+	    for (decl = BLOCK_DECL(instance); decl; decl = TREE_CHAIN(decl)) {
+		    if (TREE_CODE(decl) != PARAM_DECL)
+		        continue;
+            /*
+            printf ("debug-decl : %d = %s\n",
+                TREE_OPERAND ( DECL_PARAM_RVAL(decl), 0),
+                IDENT ( DECL_NAME(decl) )
+            );
+            */
+
+		    DECL_PARAM_REDIRECT(decl) = TREE_PURPOSE(param_list);
+
+		    if ((param_list = TREE_CHAIN(param_list)) == 0)
+		        break;
 	    }
 	    if (param_list)
 		error("Too many module instance parameter assignments",

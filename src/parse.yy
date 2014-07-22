@@ -336,6 +336,7 @@ void init_parse()
 %type	<ttype>	gate_instance
 %type	<ttype>	UDP_or_module_instantiation
 %type	<ttype>	xparameter_value_assignment constant_expression_clist
+%type	<ttype>	xparameter_named_connect xparameter_named_connect_clist
 /* %type	<ttype>	UDP_instance_clist */
 /* %type	<ttype>	UDP_instance */
 /* %type	<ttype>	xterminal_clist */
@@ -1400,20 +1401,19 @@ gate_instance
 
 
 UDP_or_module_instantiation
-	: IDENTIFIER /* drive_strength_o */ xparameter_value_assignment
+	//: IDENTIFIER /* drive_strength_o */ xparameter_value_assignment
+	//	{ current_instance_module = $1;
+	//	  current_instance_param = $2;
+	//	  in_instantiation = 1;
+	//	}
+	//  module_instance_clist sc
+	//	{ current_instance_module = NULL_TREE;
+	//	  current_instance_param = NULL_TREE;
+	//	  in_instantiation = 0;
+	//	}
+	: IDENTIFIER xparameter_value_assignment
 		{ current_instance_module = $1;
-		  current_instance_param = $2;
-		  in_instantiation = 1;
-		}
-	  module_instance_clist sc
-		{ current_instance_module = NULL_TREE;
-		  current_instance_param = NULL_TREE;
-		  in_instantiation = 0;
-		}
-	| IDENTIFIER
-      '#' '(' constant_expression_clist rp
-		{ current_instance_module = $1;
-		  current_instance_param = nreverse ($4);
+		  current_instance_param = nreverse ($2);
 		  in_instantiation = 1;
 		}
 	  module_instance_clist sc
@@ -1446,36 +1446,60 @@ UDP_or_module_instantiation
 		{ $$ = 0; }
 	; */
 
+
+//xparameter_value_assignment
+//	: /* empty */
+//		{ $$ = NULL; }
+//	| '#' '(' rp
+//		{ $$ = NULL; }
+//	//| '#' constant_expression
+//	//	{ $$ = build_tree_list ($2, NULL_TREE); }
+//	//| '#' '(' constant_expression_clist ')'
+//	//	{ $$ = nreverse ($3); }
+//	| '#' '(' mintypmax_expression ')'
+//		{ $$ = build_tree_list ($3, NULL_TREE); }
+//	| '#' '(' mintypmax_expression ',' mintypmax_expression ')'
+//		{ $$ = build_tree_list ($5, NULL_TREE);
+//		  $$ = tree_cons ($3, NULL_TREE, $$);
+//		}
+//	| '#' '(' mintypmax_expression ',' mintypmax_expression ',' mintypmax_expression ')'
+//		{ $$ = build_tree_list ($7, NULL_TREE);
+//		  $$ = tree_cons ($5, NULL_TREE, $$);
+//		  $$ = tree_cons ($3, NULL_TREE, $$);
+//		}
+//	;
+
+
 xparameter_value_assignment
 	: /* empty */
 		{ $$ = NULL; }
 	| '#' '(' rp
 		{ $$ = NULL; }
-	//| '#' constant_expression
-	//	{ $$ = build_tree_list ($2, NULL_TREE); }
-	//| '#' '(' constant_expression_clist ')'
-	//	{ $$ = nreverse ($3); }
-/*
-	| '#' '(' mintypmax_expression ')'
-		{ $$ = build_tree_list ($3, NULL_TREE); }
-	| '#' '(' mintypmax_expression ',' mintypmax_expression ')'
-		{ $$ = build_tree_list ($5, NULL_TREE);
-		  $$ = tree_cons ($3, NULL_TREE, $$);
-		}
-	| '#' '(' mintypmax_expression ',' mintypmax_expression ',' mintypmax_expression ')'
-		{ $$ = build_tree_list ($7, NULL_TREE);
-		  $$ = tree_cons ($5, NULL_TREE, $$);
-		  $$ = tree_cons ($3, NULL_TREE, $$);
-		}
-*/
+	| '#' '(' constant_expression_clist rp
+		{ $$ = $3; }
+	| '#' '(' xparameter_named_connect_clist rp
+		{ $$ = $3; }
 	;
-
 
 constant_expression_clist
 	: mintypmax_expression
 		{ $$ = build_tree_list ($1, NULL_TREE); }
 	| constant_expression_clist ',' mintypmax_expression
 		{ $$ = tree_cons ($3, NULL_TREE, $1); }
+	;
+
+xparameter_named_connect_clist
+	: xparameter_named_connect
+	| xparameter_named_connect_clist ',' xparameter_named_connect
+		{ $$ = chainon ($3, $1); }
+	;
+
+xparameter_named_connect
+	: '.' IDENTIFIER '(' expression rp
+		{ $$ = build_tree_list ($4, $2);
+        }
+	| '.' IDENTIFIER '(' rp
+        { $$ = NULL; }
 	;
 
 
