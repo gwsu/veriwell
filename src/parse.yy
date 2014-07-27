@@ -393,7 +393,7 @@ void init_parse()
 %type	<ttype>	mintypmax_expression
 %type	<ttype>	mintypmax_expression_triplet
 %type	<ttype>	expression expressing
-%type	<ttype>	primary
+%type	<ttype>	primary primary_ident
 %type	<ttype>	concatenation
 %type	<ttype>	function_call
 %type	<ttype>	identifier
@@ -2655,24 +2655,29 @@ STRING is text enclosed in "" and contained on one line
 primary
 	: NUMBER
 	| BASE_NUMBER
-	| identifier 		%prec LOWEST
-		{ $$ = check_rval ($1);
+	| primary_ident
+		{ $$ = $1;
           if ( in_sensitive_wildcard )
               sensitive_list_t = chainon (build_tree_list (build_unary_op (
                                                            ANYEDGE_EXPR, $$),
                                           NULL_TREE),
                                  sensitive_list_t);
         }
-	| identifier '[' expression ']'
-		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3); }
-	| identifier '[' constant_expression ':' constant_expression ']'
-		{ $$ = build_part_ref (check_rval_nocheck ($1), $3, $5); }
 	| concatenation
 	| function_call
 	//| '(' mintypmax_expression rp
 	//	{ $$ = $2; }
 	| '(' error rp
 		{ $$ = error_mark_node; }
+	;
+
+primary_ident
+	: identifier %prec LOWEST
+		{ $$ = check_rval ($1); }
+	| identifier '[' expression ']'
+		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3); }
+	| identifier '[' constant_expression ':' constant_expression ']'
+		{ $$ = build_part_ref (check_rval_nocheck ($1), $3, $5); }
 	;
 
 /*
