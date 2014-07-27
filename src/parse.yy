@@ -106,6 +106,8 @@ int in_instantiation = 0;
 
 /* If inside event statement, accept event types. */
 int in_event = 0;
+int in_sensitive_wildcard = 0;
+tree sensitive_list_t;
 
 
 struct port_array_node  *port_decl_t;
@@ -400,7 +402,7 @@ void init_parse()
 %type	<ttype>	delay
 %type	<ttype>	mintypmax_clist
 %type	<ttype>	delay_control
-%type	<ttype>	event_control
+%type	<ttype>	event_control event_wildcard
 %type	<ttype>	event_expression
 %type	<integer> edge_list
 
@@ -1693,8 +1695,14 @@ statement
 		  function_error;
 		}
 	  statement_or_null
-		{ STMT_BODY ($1) = $3;
-		  $$ = $1;
+		{ //STMT_BODY ($1) = $3;
+		  //$$ = $1;
+          sensitive_list_t =  in_sensitive_wildcard ?
+                              build_stmt (EVENT_STMT, lineno, NULL_TREE, sensitive_list_t) :
+                              $1;
+          STMT_BODY (sensitive_list_t) = $3;
+		  $$ = sensitive_list_t;
+          in_sensitive_wildcard = 0;
 		}
 
 	| lvalue '='
@@ -2648,7 +2656,13 @@ primary
 	: NUMBER
 	| BASE_NUMBER
 	| identifier 		%prec LOWEST
-		{ $$ = check_rval ($1); }
+		{ $$ = check_rval ($1);
+          if ( in_sensitive_wildcard )
+              sensitive_list_t = chainon (build_tree_list (build_unary_op (
+                                                           ANYEDGE_EXPR, $$),
+                                          NULL_TREE),
+                                 sensitive_list_t);
+        }
 	| identifier '[' expression ']'
 		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3); }
 	| identifier '[' constant_expression ':' constant_expression ']'
@@ -2821,7 +2835,18 @@ event_control
 	  event_expression rp /* statement_or_null */
 		{ $$ = build_stmt (EVENT_STMT, lineno, NULL_TREE, $4);
 		  in_event = 0; }
+    | '@' event_wildcard
+      { in_sensitive_wildcard = 1;
+        $$ = sensitive_list_t = NULL_TREE;
+      }
 	;
+
+event_wildcard
+    : '*'
+      { $$ = NULL_TREE; }
+    | '(' '*' rp
+      { $$ = NULL_TREE; }
+    ;
 
 event_expression
 	: expression
