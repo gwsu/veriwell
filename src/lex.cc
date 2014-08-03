@@ -474,6 +474,24 @@ static tree parse_base_const(nbits_t length)
     return t;
 }
 
+
+tree const_one (void)
+{
+    enum radii base = BIN;
+    nbits_t length = sizeof(unsigned_32_t);
+    tree t = build_bit_cst(length, base);
+    Group * g = BIT_CST_GROUP (t);
+// a b v
+// 0 1 x
+// 1 0 1
+// 0 0 
+// 1 1 x
+    AVAL(g) = 1;
+    BVAL(g) = 0;
+    return t;
+}
+
+
 void
 parse_base_const1(enum radii base, char *p1, nbits_t length,
 		  nbits_t numchars, tree t)

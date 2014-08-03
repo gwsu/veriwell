@@ -2047,6 +2047,44 @@ lval_normal
 	| identifier '[' expression ':' expression ']'
 		{ $$ = build_part_ref (
 			check_lval_nocheck ($1, lval_type, current_spec), $3, $5); }
+	| identifier '[' expression '+' ':' constant_expression ']'
+		{ tmp_tree = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), $3);
+          $$ = build_tree_list (tmp_tree, NULL_TREE);
+
+          int  i = INT_CST_DATA ($6);
+          tree j = $3;
+
+		  for ( ; i > 1; i-- )
+          {
+            j = build_binary_op (PLUS_EXPR, j, const_one());
+            tmp_tree = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), j);
+            $$ = tree_cons (tmp_tree, NULL_TREE, $$);
+          }
+
+          tmp_tree = nreverse($$);
+          $$ = make_node (CONCAT_REF);
+		  CONCAT_LIST ($$) = tmp_tree;
+		  concat_labels ($$);
+        }
+	| identifier '[' expression '-' ':' constant_expression ']'
+		{ tmp_tree = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), $3);
+          $$ = build_tree_list (tmp_tree, NULL_TREE);
+
+          int  i = INT_CST_DATA ($6);
+          tree j = $3;
+
+		  for ( ; i > 1; i-- )
+          {
+            j = build_binary_op (MINUS_EXPR, j, const_one());
+            tmp_tree = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), j);
+            $$ = tree_cons (tmp_tree, NULL_TREE, $$);
+          }
+
+          tmp_tree = $$;
+          $$ = make_node (CONCAT_REF);
+		  CONCAT_LIST ($$) = tmp_tree;
+		  concat_labels ($$);
+        }
 	;
 
 /*
@@ -2678,6 +2716,44 @@ primary_ident
 		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3); }
 	| identifier '[' constant_expression ':' constant_expression ']'
 		{ $$ = build_part_ref (check_rval_nocheck ($1), $3, $5); }
+	| identifier '[' expression '+' ':' constant_expression ']'
+		{ tmp_tree = build_bit_ref (check_rval_nocheck ($1), $3);
+          $$ = build_tree_list (tmp_tree, NULL_TREE);
+
+          int  i = INT_CST_DATA ($6);
+          tree j = $3;
+
+		  for ( ; i > 1; i-- )
+          {
+            j = build_binary_op (PLUS_EXPR, j, const_one());
+            tmp_tree = build_bit_ref (check_rval_nocheck ($1), j);
+            $$ = tree_cons (tmp_tree, NULL_TREE, $$);
+          }
+
+          tmp_tree = nreverse($$);
+          $$ = make_node (CONCAT_REF);
+		  CONCAT_LIST ($$) = tmp_tree;
+		  concat_labels ($$);
+        }
+	| identifier '[' expression '-' ':' constant_expression ']'
+		{ tmp_tree = build_bit_ref (check_rval_nocheck ($1), $3);
+          $$ = build_tree_list (tmp_tree, NULL_TREE);
+
+          int  i = INT_CST_DATA ($6);
+          tree j = $3;
+
+		  for ( ; i > 1; i-- )
+          {
+            j = build_binary_op (MINUS_EXPR, j, const_one());
+            tmp_tree = build_bit_ref (check_rval_nocheck ($1), j);
+            $$ = tree_cons (tmp_tree, NULL_TREE, $$);
+          }
+
+          tmp_tree = $$;
+          $$ = make_node (CONCAT_REF);
+		  CONCAT_LIST ($$) = tmp_tree;
+		  concat_labels ($$);
+        }
 	;
 
 /*
