@@ -277,7 +277,7 @@ void init_parse()
 %type	<ttype>	list_of_ports
 %type	<ttype>	list_of_port_declarations
 %type	<ttype>	list_of_port_array port_direction port_attribute
-%type	<ttype> list_of_port_identifier list_of_port_ident list_of_port_delimit
+%type	<ttype> list_of_port_identifier list_of_port_ident list_of_delimit
 %type	<ttype>	port_clist
 %type	<ttype>	port
 %type	<ttype>	port_expression_o
@@ -309,7 +309,7 @@ void init_parse()
 %type	<ttype>  specify_if_clause	
 %type	<ttype>	timing_input_terminal_descriptor
 
-%type	<ttype>	parameter_declaration
+%type	<ttype>	parameter_declaration list_of_param_declaration_2001 parameter_declaration_2001
 %type	<ttype>	list_of_param_assignments
 %type	<ttype>	param_assignment
 %type	<ttype>	setspec setnetspec static_declaration port_declaration port_spec
@@ -495,8 +495,9 @@ module
 		  /* for now, assume all to be at lop level */
 	      // top_level = chainon (current_module, top_level);
 		}
+      list_of_param_declaration_2001
 	  list_of_ports sc
-		{ MODULE_PORT_LIST (current_module) = nreverse ($5);
+		{ MODULE_PORT_LIST (current_module) = nreverse ($6);
           
           if ( port_decl_t )
               make_port_decl (port_decl_t);
@@ -606,7 +607,7 @@ list_of_port_identifier
     ;
 
 list_of_port_ident
-	: IDENTIFIER list_of_port_delimit
+	: IDENTIFIER list_of_delimit
 	    { set_decl ($1, $1);  /* point to itself to mark as port */ 
           $$ = build_tree_list ($1, NULL_TREE);
 
@@ -619,7 +620,7 @@ list_of_port_ident
 	| error
 	;
 
-list_of_port_delimit
+list_of_delimit
 	: ','
 		{ yyerrok; }
 	| rp
@@ -951,13 +952,34 @@ tf_declaration
 A.2 Declarations
 */
 
+list_of_param_declaration_2001
+    : /* empty */
+		{ yyerrok; }
+    | '#' '(' list_of_param_decl_2001
+        { $$ = NULL_TREE; }
+    ;
+
+list_of_param_decl_2001
+	: parameter_declaration_2001
+    | list_of_param_decl_2001 parameter_declaration_2001
+	;
+
+parameter_declaration_2001
+	: PARAMETER xrange
+		{ current_spec = make_param_spec ($2); }
+	  list_of_param_assignments list_of_delimit
+		{ BLOCK_DECL (current_scope) =
+			chainon ($4, BLOCK_DECL (current_scope));
+		}
+	;
+
 parameter_declaration
 	: PARAMETER xrange
 		{ current_spec = make_param_spec ($2); }
 	  list_of_param_assignments sc
 		{ BLOCK_DECL (current_scope) =
 			chainon ($4, BLOCK_DECL (current_scope));
-		 }
+		}
 	;
 
 list_of_param_assignments
