@@ -265,6 +265,10 @@ void init_parse()
 %token <c> UDP_B
 %token <c> UDP_HOOK
 
+%token	LOCALPARAM
+%token	GENVAR
+%token	GENERATE
+%token	ENDGENERATE
 
 %token	EOF_
 
@@ -975,6 +979,12 @@ parameter_declaration_2001
 
 parameter_declaration
 	: PARAMETER xrange
+		{ current_spec = make_param_spec ($2); }
+	  list_of_param_assignments sc
+		{ BLOCK_DECL (current_scope) =
+			chainon ($4, BLOCK_DECL (current_scope));
+		}
+	| LOCALPARAM xrange
 		{ current_spec = make_param_spec ($2); }
 	  list_of_param_assignments sc
 		{ BLOCK_DECL (current_scope) =

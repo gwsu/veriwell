@@ -135,3 +135,9 @@ $skew, SKEW, NO_TYPE
 $recovery, RECOVERY, NO_TYPE
 $setuphold, SETUPHOLD, NO_TYPE
 $nochange, NOCHANGE, NO_TYPE
+#
+# signal strengths
+localparam, LOCALPARAM, NO_TYPE
+genvar, GENVAR, NO_TYPE
+generate, GENERATE, NO_TYPE
+endgenerate, ENDGENERATE, NO_TYPE
