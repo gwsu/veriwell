@@ -146,7 +146,7 @@ DEFTREECODE (NAMED_BLOCK, "named_block", "b", 0)
 /* Mother of all blocks */
 DEFTREECODE (SUPER_BLOCK, "super_block", "b", 0)
 
-
+
 /* All statement types have fields STMT_SOURCE_FILE and STMT_SOURCE_LINE.  */
 /* Consecutive statements within a compound statement are chained together
    through the TREE_CHAIN field.  */
@@ -339,7 +339,7 @@ DEFTREECODE (RELEASE_STMT, "release_stmt", "s", 1)
 */
 DEFTREECODE (INSTANCE_NODE, "instance_node", "s", 5)
 
-
+
 /* Expressions */
 
 /* First, the constants.  */
@@ -443,7 +443,7 @@ DEFTREECODE (RESULT_DECL, "result_decl", "d", 1)
 /* Represents a placeholder for block names: named begin, named fork, task
    or function names are represented. */
 DEFTREECODE (BLOCK_DECL, "block_decl", "d", 0)
-
+
 /* References to storage.  */
 
 /* A placeholder for hierarchical names */

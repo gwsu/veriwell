@@ -164,7 +164,7 @@ void init_tree()
     error_mark_node = make_node(ERROR_MARK);
     TREE_NBITS(error_mark_node) = 0;
 }
-
+
 /* Allocate SIZE bytes in the current obstack
    and return a pointer to them.
    In practice the current obstack is always the temporary one.  */
@@ -239,7 +239,7 @@ void switch_to_permanent_obstack()
 {
     current_obstack = &permanent_obstack;
 }
-
+
 
 /* Return a newly allocated node of code CODE.
    Initialize the node's unique id and its TREE_PERMANENT flag.
@@ -370,7 +370,7 @@ tree make_node(enum tree_code code)
 
     return t;
 }
-
+
 /* Return a new node with the same contents as NODE
    except that its TREE_CHAIN is zero and it has a fresh uid.  */
 
@@ -435,7 +435,7 @@ tree copy_node(tree node)
 
     return t;
 }
-
+
 
 #define HASHBITS 30
 
@@ -502,7 +502,7 @@ void start_identifier_warnings()
 {
     do_identifier_warnings = 1;
 }
-
+
 
 /* Return a node that points to a bit constant. */
 
@@ -535,7 +535,7 @@ tree build_string(int len, char *str)
 	(char *) obstack_copy0(current_obstack, str, len);
     return s;
 }
-
+
 
 
 /* Return the length of a chain of nodes chained through TREE_CHAIN.
@@ -670,7 +670,7 @@ void set_all_list_values(tree list, tree value)
     for (t = list; t; t = TREE_CHAIN(t))
 	TREE_VALUE(t) = value;
 }
-
+
 /* Return non-zero if node is a vector net or scalar net */
 
 int is_net_code(enum tree_code code)
@@ -863,7 +863,7 @@ char *decl_type(tree node)
     }
     return "";
 }
-
+
 
 /* Low-level constructors for expressions.  */
 
@@ -926,7 +926,7 @@ tree build_nt(enum tree_code code, ...)
     va_end(p);
     return t;
 }
-
+
 /* Create a DECL_... node of code CODE, name NAME and data type TYPE.
    We do NOT enter this node in any sort of symbol table.
 
@@ -1037,7 +1037,7 @@ tree build_function(tree ident)
 //  make_decl (ident, current_scope);
     return tmp;
 }
-
+
 tree build_stmt(enum tree_code code, ...)
 {
     /*register */ va_list p;
@@ -1112,7 +1112,7 @@ build_cont_assign(tree lval, tree rval, lineno_t lineno, tree delay,
     add_cont_assign_list(stmt);
     return stmt;
 }
-
+
 
 
 /************************************************************************

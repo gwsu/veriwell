@@ -133,7 +133,7 @@ enum lval_type {
     LVAL_REG_NET,
     LVAL_GATE
 };
-
+
 /* Codes that identify the various built in functions
    so that expand_call can identify them quickly.  */
 
@@ -145,7 +145,7 @@ enum lval_type {
 //  DISPLAYO,
 //  DISPLAYB
 //};
-
+
 /* The definition of tree nodes fills the next several pages.  */
 
 /* A tree node can represent a variable, an expression
@@ -258,7 +258,7 @@ struct tree_common {
    are chained together.  */
 
 #define TREE_CHAIN(NODE) ((NODE)->common.chain)
-
+
 /* Define many boolean fields that all tree nodes have.  */
 
 /* For expression nodes, this determines if the expression tree represents
@@ -373,7 +373,7 @@ struct tree_common {
 
 /* If pli async is enabled set this flag */
 #define ASYNCH_ATTR(NODE) ((NODE) -> common.pli_asynch)
-
+
 
 /* Define additional fields and accessors for nodes representing constants.  */
 
@@ -423,7 +423,7 @@ struct tree_string {
     int length;
     char *pointer;
 };
-
+
 /* Define fields and accessors for some special-purpose tree nodes.  */
 
 #define IDENTIFIER_LENGTH(NODE) ((NODE)->identifier.length)
@@ -596,7 +596,7 @@ struct tree_exp {
 	union tree_node **exp_code;
     } operands[1];
 };
-
+
 /* Define fields and accessors for nodes representing declared names.  */
 
 #define DECL_NAME(NODE) ((NODE)->decl_common.name)
@@ -909,7 +909,7 @@ struct tree_decl_parameter {
     union tree_node **rval_code;
     union tree_node *redirect;
 };
-
+
 
 
 /* This is used at runtime to keep track of which SCB is in which scope.
@@ -1097,7 +1097,7 @@ struct tree_gate_instance {
 //  union tree_node *next;      /* For threading on the wait list */
 //  union tree_node **prev;     /*  (ok to use ADD_LIST, etc.) */
 };
-
+
 
 /* Define fields and accessors for nodes representing statements. */
 
@@ -1275,7 +1275,7 @@ struct tree_instance {
     union tree_node *params;	/* TREE_LIST or param overrides */
     union tree_node *block;	/* Points to block after pass2 */
 };
-
+
 /* Define the overall contents of a tree node.
    It may be any of the structures declared above
    for various types of node.  */
@@ -1356,7 +1356,7 @@ tree build_cont_assign(tree, tree, lineno_t, tree, int);
 tree build_binary_op(enum tree_code, tree, tree);
 tree build_unary_op(enum tree_code, tree);
 tree build_cond_expr(tree, tree, tree);
-
+
 tree build_int_cst(signed_32_t);
 tree build_real_cst(char *);
 tree build_bit_cst(nbits_t, enum radii);
@@ -1386,7 +1386,7 @@ int list_length(tree);
 int lvalue_or_else();
 int is_proc_lval(tree);
 tree the_lval(tree);
-
+
 /* Declare commonly used variables for tree structure.  */
 
 /* Node to pass lsb/msb expressions during parse */
@@ -1430,7 +1430,7 @@ extern lineno_t stmt_lineno;
 /* Points to the FUNCTION_DECL of the function whose body we are reading. */
 
 extern tree current_function_decl;
-
+
 
 void clear_temporary();
 
