@@ -1227,8 +1227,12 @@ int yylex(YYSTYPE * lvalp)
 	    return '&';
 	}
 
+    case '+':
+	return follow(':', PART_SELECT_PLUS, '+');
+
     case '-':
-	return follow('>', ARROW_, '-');
+	return follow('>', ARROW_,
+			  follow(':', PART_SELECT_MINUS, '-'));
     case '~':
 	return follow('^', XNOR,
 		      follow('&', REDUCTION_NAND,

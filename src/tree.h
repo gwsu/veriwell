@@ -580,12 +580,22 @@ struct tree_part {
 #define CONCAT_EXPR(NODE) ((NODE)->concat.expr)
 #define CONCAT_COUNT(NODE) ((NODE)->concat.count)
 
+#define CONCAT_DECL(NODE) ((NODE)->concat.decl)
+#define CONCAT_STARTING(NODE) ((NODE)->concat.starting)
+#define CONCAT_MODE(NODE) ((NODE)->concat.mode)
+#define CONCAT_NAME(NODE) ((NODE)->concat.name)
+
 struct tree_concat {
     char common[sizeof(struct tree_common)];
     union tree_node *list;
     nbits_t nbits;
-    union tree_node *expr;	/* for repeat counts */
+    union tree_node *expr;	/* for repeat counts and part-select width */
     unsigned_32_t count;	/* ditto */
+
+    union tree_node *decl;
+    union tree_node *starting;
+    enum tree_code mode;  /* +: PLUS_EXPR -: MINUS_EXPR */
+    union tree_node *name;
 };
 
 struct tree_exp {
@@ -596,6 +606,7 @@ struct tree_exp {
 	union tree_node **exp_code;
     } operands[1];
 };
+
 
 /* Define fields and accessors for nodes representing declared names.  */
 

@@ -593,6 +593,49 @@ tree build_part_ref(tree decl, tree msb, tree lsb)
     return error_mark_node;
 }
 
+tree build_part_select_ref(tree decl, tree starting, tree width, enum tree_code mode)
+{
+    tree tmp;
+    tree ident = DECL_NAME(decl);
+    if (decl == error_mark_node) {
+	return error_mark_node;
+    }
+
+    switch (TREE_CODE(decl)) {
+    case (REG_VECTOR_DECL):
+    case (NET_VECTOR_DECL):
+    case INTEGER_DECL:
+    case PARAM_DECL:
+	tmp = make_node(PART_SELECT_REF);
+	CONCAT_STARTING(tmp) = starting;
+	CONCAT_EXPR(tmp) = width;
+	CONCAT_MODE(tmp) = mode;
+	CONCAT_DECL(tmp) = decl;
+	return tmp;
+    case (REG_SCALAR_DECL):
+    case (NET_SCALAR_DECL):
+	error("'%s' is not a vector", IDENT(ident), NULL_CHAR);
+	return error_mark_node;
+    case (ARRAY_DECL):
+	error
+	    ("'%s' is an array; it cannot be be referenced as a part-select",
+	     IDENT(ident), NULL_CHAR);
+	break;
+    case IDENTIFIER_NODE:	/* for hierarchical reference */
+	tmp = make_node(PART_SELECT_REF);
+	CONCAT_STARTING(tmp) = starting;
+	CONCAT_EXPR(tmp) = width;
+	CONCAT_MODE(tmp) = mode;
+	CONCAT_DECL(tmp) = decl;
+	HIERARCHICAL_ATTR(tmp) = 1;
+	return tmp;
+    default:
+	error("'%s' is not of a type that supports part-selects",
+	      IDENT(ident), NULL_CHAR);
+    }
+    return error_mark_node;
+}
+
 tree build_function_call(tree ident, tree args)
 {
     tree t = IDENT_CURRENT_DECL(ident), tmp;

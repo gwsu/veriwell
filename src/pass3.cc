@@ -26,6 +26,7 @@
 #include "glue.h"
 #include "vtypes.h"
 #include "tree.h"
+#include "lex.h"
 #include "schedule.h"
 #include "obstack.h"
 #include "acc_user.h"
@@ -504,6 +505,46 @@ static nbits_t fixup_reference(tree node)
 	TREE_NBITS(node) = TREE_NBITS(ARRAY_REF_DECL(node));
 	break;
 
+    case PART_SELECT_REF:
+	if (HIERARCHICAL_ATTR(node)) {
+	    CONCAT_DECL(node) = resolve_hierarchical_name(CONCAT_NAME(node));
+	    if (CONCAT_DECL(node) == error_mark_node) {
+		TREE_NBITS(node) = 1;
+		break;
+	    }
+	}
+
+    {
+        nbits_t  i = get_range(CONCAT_EXPR(node),
+		    IDENTIFIER_POINTER(DECL_NAME(CONCAT_DECL(node))));
+        tree j = CONCAT_STARTING(node);
+
+        tree tmp_tree = build_bit_ref (CONCAT_DECL(node), j);
+        tree tmp2 = build_tree_list (tmp_tree, NULL_TREE);
+/*
+printf("debug : j=%d, i=%d\n",
+	    get_range(j, IDENTIFIER_POINTER(DECL_NAME(CONCAT_DECL(node)))), i );*/
+
+		for ( ; i > 1; i-- )
+        {
+          j = build_binary_op (CONCAT_MODE(node), j, const_one());
+          tmp_tree = build_bit_ref (CONCAT_DECL(node), j);
+          tmp2 = tree_cons (tmp_tree, NULL_TREE, tmp2);
+        }
+
+        tmp_tree = (CONCAT_MODE(node) == PLUS_EXPR) ?
+                      nreverse(tmp2) : tmp2 ; // or MINUS_EXPR
+		CONCAT_LIST (node) = tmp_tree;
+		concat_labels (node);
+    }
+
+
+    TREE_SET_CODE(node, CONCAT_REF);
+	TREE_NBITS(node) = fixup_reference(node);
+    //fixup_reference(node);
+    break;
+
+
     case CONCAT_REP_REF:
 	val = get_const(CONCAT_EXPR(node), &nbits);
 	if (!BVAL(val))
@@ -514,6 +555,7 @@ static nbits_t fixup_reference(tree node)
 	    warning
 		("Repeat count expression is larger than 32 bits; will be truncated",
 		 NULL, NULL);
+
 
     case CONCAT_REF:
 	nbits = prev_nbits = 0;

@@ -733,6 +733,7 @@ void eval(tree * pc)
 	    *++R = g + 1;
 	    break;
 
+	//case PART_SELECT_REF:
 	case CONCAT_REF:
 	case CONCAT_REP_REF:
 	    R_nbits = TREE_NBITS(t);

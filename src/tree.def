@@ -468,6 +468,7 @@ DEFTREECODE (PART_REF, "part_ref", "r", 9)
 DEFTREECODE (CONCAT_REF, "concat_ref", "r", 2)
 DEFTREECODE (CONCAT_REP_REF, "concat_rep_ref", "r", 4)
 
+DEFTREECODE (PART_SELECT_REF, "part_select_ref", "r", 8)
 /* Shadow references are used when the size of a var must be adjusted
    to something other than the native size. */
 DEFTREECODE (SHADOW_REF, "shadow_ref", "r", 0)

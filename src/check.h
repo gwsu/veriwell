@@ -37,6 +37,7 @@ tree check_rval_nocheck(tree ident);
 tree check_block(tree ident);
 tree build_bit_ref(tree decl, tree index);
 tree build_part_ref(tree decl, tree msb, tree lsb);
+tree build_part_select_ref(tree decl, tree starting, tree width, enum tree_code mode);
 tree build_function_call(tree ident, tree args);
 tree check_task(tree node);
 tree check_function(tree node);
