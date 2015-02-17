@@ -410,7 +410,7 @@ void init_parse()
 %type	<ttype>	mintypmax_clist
 %type	<ttype>	delay_control
 %type	<ttype>	event_control event_wildcard
-%type	<ttype>	event_expression
+%type	<ttype>	event_expression event_express
 %type	<integer> edge_list
 
 %type	<ttype>	rp
@@ -2898,7 +2898,7 @@ event_wildcard
       { $$ = NULL_TREE; }
     ;
 
-event_expression
+event_express
 	: expression
 		{ /*if (TREE_CODE ($1) == EVENT_DECL)
 		    $$ = build_tree_list ($1, NULL_TREE);
@@ -2912,7 +2912,13 @@ event_expression
 	| NEGEDGE expression
 		{ $$ = build_tree_list 
 			(build_unary_op (NEGEDGE_EXPR, $2), NULL_TREE); }
-	| event_expression OR event_expression
+    ;
+
+event_expression
+    : event_express
+	| event_expression OR event_express
+		{ $$ = chainon ($1, $3); }
+	| event_expression ',' event_express
 		{ $$ = chainon ($1, $3); }
 	;
 
