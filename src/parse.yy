@@ -2602,25 +2602,25 @@ expression
 
 expressing
 	: primary
-	| '+' primary %prec UNARY
+	| '+' expression %prec UNARY
 		{ $$ = $2; }
-	| '-' primary %prec UNARY
+	| '-' expression %prec UNARY
 		{ $$ = build_unary_op (NEGATE_EXPR, $2); }
-	| '!' primary %prec UNARY
+	| '!' expression %prec UNARY
 		{ $$ = build_unary_op (TRUTH_NOT_EXPR, $2); }
-	| '~' primary %prec UNARY
+	| '~' expression %prec UNARY
 		{ $$ = build_unary_op (BIT_NOT_EXPR, $2); }
-	| '&' primary %prec UNARY
+	| '&' expression %prec UNARY
 		{ $$ = build_unary_op (AND_REDUCE_EXPR, $2); }
-	| REDUCTION_NAND primary %prec UNARY
+	| REDUCTION_NAND expression %prec UNARY
 		{ $$ = build_unary_op (NAND_REDUCE_EXPR, $2); }
-	| '|' primary %prec UNARY
+	| '|' expression %prec UNARY
 		{ $$ = build_unary_op (OR_REDUCE_EXPR, $2); }
-	| REDUCTION_NOR primary %prec UNARY
+	| REDUCTION_NOR expression %prec UNARY
 		{ $$ = build_unary_op (NOR_REDUCE_EXPR, $2); }
-	| '^' primary %prec UNARY
+	| '^' expression %prec UNARY
 		{ $$ = build_unary_op (XOR_REDUCE_EXPR, $2); }
-	| XNOR primary %prec UNARY
+	| XNOR expression %prec UNARY
 		{ $$ = build_unary_op (XNOR_REDUCE_EXPR, $2); }
 	| expression '+' expression
 		{ $$ = build_binary_op (PLUS_EXPR, $1, $3); }
