@@ -1184,9 +1184,9 @@ net_declaration
 	;
 
 net_spec
-	: nettype expandrange_o delay_o
-		{ $$ = current_spec = make_net_spec ($1, $2, $3);
-		  current_delay = $3;
+	: nettype expandrange_o drive_strength_o delay_o
+		{ $$ = current_spec = make_net_spec ($1, $2, $4);
+		  current_delay = $4;
 		}
 	;
 
