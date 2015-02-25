@@ -23,6 +23,7 @@
 #define yyparse prog_parse
 #define YYERROR_VERBOSE
 #define YYDEBUG 2
+#define YYMAXDEPTH 100000
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -294,8 +295,8 @@ void init_parse()
 %type	<ttype>	UDP
 %type	<ttype>	task
 %type	<ttype>	function function_type
-%type	<ttype>	tf_declaration_list
-%type	<ttype>	tf_declaration
+%type	<ttype>	tf_declaration_list tf_declaration
+%type	<ttype>	tf_port_array_2001 tf_port_list_2001 tf_port_spec_2001 tf_reg_spec_2001
 
 %type	<ttype> specify_stuff
 %type	<ttype> specify_items
@@ -895,18 +896,19 @@ table_digit1
 	;
 
 task
-	: TASK IDENTIFIER sc
+	: TASK IDENTIFIER
 		{ syn_warning ("Task definition");
 		  tmp_tree = build_task (check_task ($2));
-		  make_block_decl ($3, current_scope, tmp_tree);
+		  make_block_decl ($2, current_scope, tmp_tree);
 		  current_scope = tmp_tree;
 		  BLOCK_DOWN (current_module) = chainon (current_scope, BLOCK_DOWN (current_module));
 		  BLOCK_UP (current_scope) = current_module;
 		  push_scope ();
 		  in_tf = 1;
 		}
+      tf_port_array_2001 sc
 	  tf_declaration_list statement_or_null ENDTASK
-		{ BLOCK_BODY (current_scope) = $6;
+		{ BLOCK_BODY (current_scope) = $7;
 		  in_tf = 0;
 		  BLOCK_PORTS (current_scope) = nreverse (BLOCK_PORTS (current_scope));
 		  BLOCK_DECL (current_scope) = nreverse (BLOCK_DECL (current_scope));
@@ -914,8 +916,57 @@ task
 		}
 	;
 
+tf_port_array_2001
+	: /* empty */
+	  { $$ = NULL; }
+    | '(' tf_port_spec_2001 tf_port_list_2001 rp
+	  { BLOCK_PORTS (current_scope) =
+		  chainon ($3, BLOCK_PORTS (current_scope)); }
+    ;
+
+tf_port_list_2001
+	: IDENTIFIER
+		{ $$ = make_decl (check_port ($1), current_spec, NULL_TREE, NULL_TREE); }
+	| tf_port_list_2001 ',' IDENTIFIER
+		{ yyerrok;
+		  $$ = chainon (make_decl (check_port ($3), current_spec, NULL_TREE, NULL_TREE), $1);
+		}
+    | tf_port_list_2001 ','
+	  { BLOCK_PORTS (current_scope) =
+		  chainon ($1, BLOCK_PORTS (current_scope)); }
+      tf_port_spec_2001 IDENTIFIER
+	  { $$ = make_decl (check_port ($5), current_spec, NULL_TREE, NULL_TREE); }
+    ;
+
+/* If inside a module, ports are nets by default, so make them so.  Inside
+   of a task or function, ports are REGs. */
+tf_port_spec_2001
+	: INPUT tf_reg_spec_2001
+		{ $$ = $2;
+		  PORT_INPUT_ATTR ($$) = 1;
+		}
+	| OUTPUT tf_reg_spec_2001
+		{ function_error;
+		  $$ = $2;
+		  PORT_OUTPUT_ATTR ($$) = 1;
+		}
+	| INOUT tf_reg_spec_2001
+		{ function_error;
+	      $$ = $2;
+		  PORT_INPUT_ATTR ($$) = 1;
+		  PORT_OUTPUT_ATTR ($$) = 1;
+		}
+	;
+
+tf_reg_spec_2001
+	: /* empty */
+      { $$ = current_spec = make_reg_spec (NULL_TREE); }
+    | reg_spec
+    ;
+
+
 function
-	: FUNCTION function_type IDENTIFIER sc
+	: FUNCTION function_type IDENTIFIER
  		{ current_scope = build_function (check_function ($3));
 		  make_block_decl ($3, current_module, current_scope);
 		  push_scope ();  /* funct name becomes var inside of funct */
@@ -924,8 +975,9 @@ function
 		  BLOCK_UP (current_scope) = current_module;
 		  in_tf = in_function = 1;
 		}
+      tf_port_array_2001 sc
 	  tf_declaration_list statement_or_null ENDFUNCTION
-		{ BLOCK_BODY (current_scope) = $7;
+		{ BLOCK_BODY (current_scope) = $8;
 		  in_tf = in_function = 0;
 		  BLOCK_PORTS (current_scope) = nreverse (BLOCK_PORTS (current_scope));
 		  BLOCK_DECL (current_scope) = nreverse (BLOCK_DECL (current_scope));
@@ -938,8 +990,9 @@ function_type
 		{ $$ = make_reg_spec (NULL_TREE); }
 	| range
 		{ $$ = make_reg_spec ($1); }
-	| INTEGER
-		{ $$ = make_integer_spec (NULL_TREE); }
+	//| INTEGER xrange
+	//	{ $$ = make_integer_spec (NULL_TREE); }
+	| reg_spec
 	| REAL
 		{ $$ = make_real_spec (NULL_TREE); }
 	;
@@ -1090,11 +1143,11 @@ reg_spec
 	| INTEGER xrange
 		{ if (!$2)
 		    syn_warning ("Integer Range");
-		  current_spec = make_integer_spec ($2);
+		  $$ = current_spec = make_integer_spec ($2);
 		}
 	| TIME xrange
 		{ syn_warning ("TIME");
-		  current_spec = make_time_spec ($2);
+		  $$ = current_spec = make_time_spec ($2);
 		}
 	;
 
