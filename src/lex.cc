@@ -1191,7 +1191,9 @@ int yylex(YYSTYPE * lvalp)
 
     switch (c) {
     case '*':
-	return follow('>', STARARROW, '*');
+	return follow('*', POW,
+			  follow('>', STARARROW, '*'));
+
     case '>':
 	return follow('=', GE, follow('>', RIGHT_SHIFT, GT));
     case '<':

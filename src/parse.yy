@@ -170,6 +170,7 @@ void init_parse()
 %left	<code>	PART_SELECT_PLUS PART_SELECT_MINUS
 %left	<code>	'+' '-'
 %left	<code>	'*' '/' '%'
+%left	<code>	POW
 %left	<code>	'(' '['
 %right	<code>	'!' '~'
 %right	<code>	REDUCTION_NOR
@@ -2636,6 +2637,10 @@ expressing
 		{ syn_warning ("Modulus operator"); }
 	  expression
 		{ $$ = build_binary_op (MOD_EXPR, $1, $4); }
+	| expression POW
+		{ syn_warning ("Power operator"); }
+	  expression
+		{ $$ = build_binary_op (POW_EXPR, $1, $4); }
 	| expression LOGICAL_EQUALITY expression
 		{ $$ = build_binary_op (EQ_EXPR, $1, $3); }
 	| expression LOGICAL_INEQUALITY expression

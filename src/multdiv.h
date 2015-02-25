@@ -30,6 +30,7 @@ void init_multdiv(void);
 Bit BitAdd(Bit * a, Bit * b, Bit * c, unsigned bits);
 Bit BitSub(Bit * a, Bit * b, Bit * c, unsigned bits);
 void GroupMult(Group * ag, Group * bg, Group * cg, unsigned groups);
+void GroupPow(Group * bg, Group * cg, unsigned groups);
 void GroupDiv(Group * ag, Group * bg, Group * cg, Group * dg,
 	      unsigned words, int do_mod);
 

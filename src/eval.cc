@@ -1640,6 +1640,51 @@ void eval(tree * pc)
 	    R++;
 	    break;
 
+	case POW_EXPR:
+	    g2 = *--R;
+	    g1 = *--R;
+
+	    if (!R_ngroups && !is_real) {
+	    //if (!R_ngroups) {
+		//if (is_real) {
+		//    REAL_(g1) *= REAL_(g2);
+		//    R++;
+		//    break;
+		//}
+		//AVAL(g1) *= AVAL(g2);
+		if (BVAL(g1) || BVAL(g2)) {
+		    AVAL(g1) = (Bit) - 1;
+		    BVAL(g1) = (Bit) - 1;
+		} else {
+            if ( AVAL(g1) == 0 ) // 0**n
+                AVAL(g1) = 0;
+            else if ( AVAL(g2) == 0 ) // n**0
+                AVAL(g1) = 1;
+            else {
+                tmp1 = AVAL(g1);
+                for (i = 1; i < AVAL(g2); i++)
+                    AVAL(g1) *= tmp1;
+            }
+		}
+		R++;
+		break;
+	    }
+
+	    cond = ZERO;
+	    for (i = 0; i <= R_ngroups; i++) {
+		/* If there are any Xs of Zs, make the result unknown */
+		if (BVAL(g1 + i) | BVAL(g2 + i)) {
+		    cond = X;
+		}
+	    }
+	    if (cond == X) {
+		load_fill(*R, R_ngroups, (Bit) - 1, (Bit) - 1);
+	    } else {
+		GroupPow(g1, g2, R_ngroups + 1);
+	    }
+	    R++;
+	    break;
+
 	case DIV_EXPR:
 	    {
 		int zeroDivisor = 0;

@@ -511,6 +511,7 @@ DEFTREECODE (NEGEDGE_EXPR, "NEGEDGE ", "er", 2)
 DEFTREECODE (PLUS_EXPR, "+", "ex", 2)
 DEFTREECODE (MINUS_EXPR, "-", "ex", 2)
 DEFTREECODE (MULT_EXPR, "*", "ex", 2)
+DEFTREECODE (POW_EXPR, "*", "ex", 2)
 
 /* Division for integer result that rounds the quotient toward zero.  */
 /* Operands must have the same machine mode.

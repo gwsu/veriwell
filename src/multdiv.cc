@@ -21,10 +21,12 @@
 */
 
 #include <stdio.h>
+#include <malloc.h>
 #include "vtypes.h"
 #include "tree.h"
 #include "multdiv.h"
 #include "veriwell.h"
+#include "glue.h"
 
 
 static unsigned NZGroups(Group * ag, unsigned groups);
@@ -275,6 +277,62 @@ void GroupMult(Group * ag, Group * bg, Group * cg, unsigned groups)
 	ag[i].bit.bval = 0;
     }
 }
+
+
+/*
+ * b=b**c
+ */
+void GroupPow(Group * bg, Group * cg, unsigned groups)
+{
+    /*
+     * calculate number if significant words in each group
+     */
+    unsigned bGroups;
+    unsigned cGroups;
+    bGroups = NZGroups(bg, groups);
+    cGroups = NZGroups(cg, groups);
+
+    if (bGroups > 1 || (bg[0].bit.aval & 0x80000000)) {
+        printf("Error : base (%d*32, 0x%X) illegal in power (**) arithmetic !\n",
+                bGroups, bg[0].bit.aval);
+	    shell_exit(-1);
+    }
+
+    Group * tg;
+    tg = (Group *)xmalloc(2*groups*sizeof(Group));
+
+    for (int i = 0; i < 2*groups; i++) {
+    tg[i].bit.aval = 0;
+    tg[i].bit.bval = 0;
+    }
+
+    if ( bg[0].bit.aval != 0 ) { // 0**n
+        if ( cg[0].bit.aval == 0 ) { // n**0
+            tg[0].bit.aval = 1;
+        }
+        else if (cGroups > 1 || (cg[0].bit.aval & 0x80000000)) {
+            printf("Error : exponent (%d*32, 0x%X) illegal in power (**) arithmetic !\n",
+                    cGroups, cg[0].bit.aval);
+            shell_exit(-2);
+        }
+        else {
+            tg[0].bit.aval = 1;
+
+            for (int i = 0; i < cg[0].bit.aval; i++)
+                GroupMult(tg, tg, bg, groups);
+        }
+    }
+    /*
+     * copy result to destination
+     */
+    for (int i = 0; i < groups; i++) {
+	bg[i].bit.aval = tg[i].bit.aval;
+	bg[i].bit.bval = tg[i].bit.bval;
+    }
+
+    free(tg);
+}
+
 
 /* 
  * a=b-c*d, where c is a single word. 
