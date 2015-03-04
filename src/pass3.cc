@@ -1700,6 +1700,15 @@ void pass3_node_tail(tree node, tree label)
 		}
 		break;
 
+	    case (CONT_ASSIGN_IN_GENERATE):
+	    for (t = STMT_BODY(node); t; t = TREE_CHAIN(t)) {
+            add_cont_assign_list(TREE_PURPOSE(t));
+		    lineno = STMT_SOURCE_LINE(TREE_PURPOSE(t));
+		    input_filename = STMT_SOURCE_FILE(TREE_PURPOSE(t));
+		    pass3_assignment(TREE_PURPOSE(t));
+	    }
+        break;
+
 	    case (IF_STMT):
 //HEAPTEST ("Heap corrupted (in pass3 -- if)");
 		STMT_COND_CODE(node) = pass3_expr(STMT_COND(node));

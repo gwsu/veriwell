@@ -100,6 +100,8 @@ extern int is_interactive;
 int in_function = 0;
 int in_tf = 0;
 int in_systask = 0;
+int in_generate = 0;
+int in_generate_block = 0;
 
 /* If inside continuous assignment, handle lval differently */
 enum lval_type lval_type = LVAL_REG;
@@ -1240,11 +1242,14 @@ expandrange_o
 
 continuous_assign
 	: assign_spec setspec
-		{ lval_type = LVAL_NET; }
+        { lval_type = LVAL_NET; }
 	  list_of_assignments sc
-		{ lval_type = LVAL_REG; 
-		  MODULE_ASSIGNMENTS (current_module) =
-			chainon ($4, MODULE_ASSIGNMENTS (current_module));
+		{ lval_type = LVAL_REG;
+          $$ = build_stmt (CONT_ASSIGN_IN_GENERATE, $<ltype>3, $4);
+          if ( in_generate == 0 ) {
+              MODULE_ASSIGNMENTS (current_module) =
+                chainon ($4, MODULE_ASSIGNMENTS (current_module));
+          }
 		}
 	;
 
@@ -2990,8 +2995,12 @@ event_expression
 
 
 generate_statement
-    : GENERATE generate_express_list ENDGENERATE
-		{ $$ = $2; }
+    : GENERATE
+        { in_generate = 1; }
+      generate_express_list ENDGENERATE
+		{ $$ = $3;
+          in_generate = 0;
+        }
     ;
 
 generate_express_list
@@ -3023,8 +3032,7 @@ generate_block
 		  make_block_decl (check_block ($3), current_scope, tmp_tree);
 		  current_scope = tmp_tree;
 		  push_scope ();
-		  $<ttype>$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno,
-			NULL_TREE, tmp_tree);
+		  $<ttype>$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno, NULL_TREE, tmp_tree);
 		}
 	  block_declaration_list generate_sub_list END
 		{ tmp_tree = build_stmt (END_NAMED_STMT, stmt_lineno,
@@ -3045,6 +3053,7 @@ generate_sub_list
 generate_sub
     : always_statement
     | initial_statement
+    | continuous_assign
     | UDP_or_module_instantiation
     | generate_if
     ;

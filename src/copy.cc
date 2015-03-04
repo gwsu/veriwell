@@ -571,6 +571,12 @@ tree copy_tree_with_stuff(tree node, tree stuff)
 	    case ASSIGN_STMT:
 		copy_assignment(new_node, node);
 		break;
+	    case CONT_ASSIGN_IN_GENERATE:
+        in_generate = 1;
+		STMT_BODY(new_node) = copy_cont_assigns(STMT_BODY(node));
+        //continuous_assignments = NULL_TREE;
+        in_generate = 0;
+		break;
 	    case ASSIGN_DELAY_STMT:
 	    case ASSIGN_NONBLK_DELAY_STMT:
 		copy_assignment(new_node, node);

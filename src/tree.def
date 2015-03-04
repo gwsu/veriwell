@@ -157,6 +157,10 @@ DEFTREECODE (SUPER_BLOCK, "super_block", "b", 0)
 DEFTREECODE (INITIAL_BLOCK, "initial_block", "s", 1)
 DEFTREECODE (ALWAYS_BLOCK, "always_block", "s", 1)
 
+/* net assign statement.
+   STMT_BODY is the list of statements. */
+DEFTREECODE (CONT_ASSIGN_IN_GENERATE, "cont_assign_in_generate", "s", 1)
+
 /* A null statement for use with stamtement_or_null.  Although
    exec will execute it, it is needed only for aesthetic purposes during
    trace. */

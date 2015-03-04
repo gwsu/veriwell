@@ -1442,6 +1442,8 @@ extern lineno_t stmt_lineno;
 
 extern tree current_function_decl;
 
+/* 1 is between generate and endgenerate */
+extern int in_generate;
 
 void clear_temporary();
 

@@ -1109,7 +1109,10 @@ build_cont_assign(tree lval, tree rval, lineno_t lineno, tree delay,
 	NET_ASSIGNMENT(lval) = stmt;
     }
 
-    add_cont_assign_list(stmt);
+    if (in_generate == 0) {
+        add_cont_assign_list(stmt);
+    }
+
     return stmt;
 }
 
