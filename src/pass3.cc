@@ -1709,6 +1709,15 @@ void pass3_node_tail(tree node, tree label)
 		}
 		break;
 
+	    case (GENERATE_IF_STMT):
+        if (test(pass3_expr(STMT_COND(node)))) {
+            pass3_node_tail(STMT_THEN(node), alt_chain);
+        }
+		else if (STMT_ELSE(node)) {
+		    pass3_node_tail(STMT_ELSE(node), alt_chain);
+		}
+		break;
+
 	    case (WHILE_STMT):
 		STMT_WHILE_COND_CODE(node) =
 		    pass3_expr(STMT_WHILE_COND(node));

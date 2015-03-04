@@ -214,6 +214,7 @@ DEFTREECODE (FORCE_STMT, "force_stmt", "s", 7)
    STMT_THEN is the then-branch (a statement or chain of statements).
    STMT_ELSE is the else-branch (a statement or chain of statements).  */
 DEFTREECODE (IF_STMT, "if_stmt", "s", 4)
+DEFTREECODE (GENERATE_IF_STMT, "generate_if_stmt", "s", 4)
 
 /* case, casez, casex.
    STMT_CASE_INDEX is an expression for the value to dispatch on.

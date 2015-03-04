@@ -372,6 +372,10 @@ void init_parse()
 %type	<ttype>	scalar_constant		
 
 %type	<ttype>	specify_block
+%type	<ttype>	generate_statement generate_block
+%type	<ttype>	generate_if generate_else
+%type	<ttype>	generate_sub generate_sub_list
+%type	<ttype>	generate_express generate_express_list
 
 %type	<ttype>	initial_statement
 %type	<ttype>	always_statement
@@ -723,6 +727,10 @@ module_item
 	| always_statement
 		{ BLOCK_BODY (current_module) = tree_cons ($1,
 			(tree)ALWAYS_CODE, BLOCK_BODY (current_module));
+		}
+	| generate_statement
+		{ BLOCK_BODY (current_module) = tree_cons ($1,
+			NULL_TREE, BLOCK_BODY (current_module));
 		}
 	| task
 	{}
@@ -2979,6 +2987,84 @@ event_expression
 	| event_expression ',' event_express
 		{ $$ = chainon ($1, $3); }
 	;
+
+
+generate_statement
+    : GENERATE generate_express_list ENDGENERATE
+		{ $$ = $2; }
+    ;
+
+generate_express_list
+    : generate_express
+    | generate_express_list generate_express
+        { $$ = chainon ($2, $1); }
+    ;
+
+generate_express
+    : generate_if
+    ;
+
+generate_block
+    : generate_sub
+	| BEGIN
+		{ $<ttype>$ = build_stmt (BEGIN_STMT, stmt_lineno); }
+	  generate_sub_list END
+		{ STMT_BODY ($<ttype>2) = nreverse
+			(chainon (build_stmt (END_STMT, stmt_lineno), $3));
+		  $$ = $<ttype>2;
+		}
+	| BEGIN ':' IDENTIFIER
+		{ tmp_tree = make_node (NAMED_BLOCK);
+		  BLOCK_DOWN (current_scope) = chainon (tmp_tree, BLOCK_DOWN (current_scope));
+		  BLOCK_UP (tmp_tree) = current_scope;
+		  BLOCK_NAME (tmp_tree) = $3;
+		  BLOCK_BODY (tmp_tree) = NULL_TREE;
+                  BLOCK_CONTEXT_LIST (tmp_tree) = NULL;
+		  make_block_decl (check_block ($3), current_scope, tmp_tree);
+		  current_scope = tmp_tree;
+		  push_scope ();
+		  $<ttype>$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno,
+			NULL_TREE, tmp_tree);
+		}
+	  block_declaration_list generate_sub_list END
+		{ tmp_tree = build_stmt (END_NAMED_STMT, stmt_lineno,
+			NULL_TREE, STMT_BLOCK ($<ttype>4));
+		  /* STMT_BEGIN_NAMED_END ($<ttype>4) = tmp_tree; */
+		  STMT_BODY ($<ttype>4) = nreverse (chainon (tmp_tree, $6));
+		  current_scope = pop_scope ();
+		  $$ = $<ttype>4;
+		}
+    ;
+
+generate_sub_list
+    : generate_sub
+    | generate_sub_list generate_sub
+        { $$ = chainon ($2, $1); }
+    ;
+
+generate_sub
+    : always_statement
+    | initial_statement
+    | UDP_or_module_instantiation
+    | generate_if
+    ;
+
+generate_if
+	: IF    { $<ltype>$ = stmt_lineno; }
+	        '(' expression rp
+            generate_block
+            generate_else
+		{ $$ = build_stmt (GENERATE_IF_STMT, $<ltype>2, $4, $6, $7); }
+    ;
+
+generate_else
+	: /* empty */		%prec IF
+		{ $$ = NULL; }
+	| ELSE generate_block
+		{ $$ = $2; }
+	;
+
+
 
 /*
 "Important" terminals

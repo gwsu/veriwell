@@ -584,6 +584,7 @@ tree copy_tree_with_stuff(tree node, tree stuff)
 		    copy_tree(STMT_ASSIGN_DELAY(node));
 		break;
 	    case IF_STMT:
+        case GENERATE_IF_STMT:
 		STMT_COND(new_node) = copy_tree(STMT_COND(node));
 		STMT_THEN(new_node) = copy_tree(STMT_THEN(node));
 		STMT_ELSE(new_node) = copy_tree(STMT_ELSE(node));
