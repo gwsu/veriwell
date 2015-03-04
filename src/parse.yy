@@ -1186,10 +1186,13 @@ net_declaration
 		}
 	| trireg_spec setspec decl_identifiers sc
 	| net_spec setnetspec list_of_net_assignments sc
-		{ lval_type = LVAL_REG; 
-		  MODULE_ASSIGNMENTS (current_module) =
-			chainon ($3, MODULE_ASSIGNMENTS (current_module));
-		  current_delay = NULL_TREE;
+		{ lval_type = LVAL_REG;
+          $$ = build_stmt (CONT_ASSIGN_IN_GENERATE, NULL_TREE, $3);
+          if ( in_generate == 0 ) {
+            MODULE_ASSIGNMENTS (current_module) =
+                chainon ($3, MODULE_ASSIGNMENTS (current_module));
+            current_delay = NULL_TREE;
+          }
 		}
 	;
 
@@ -1245,7 +1248,7 @@ continuous_assign
         { lval_type = LVAL_NET; }
 	  list_of_assignments sc
 		{ lval_type = LVAL_REG;
-          $$ = build_stmt (CONT_ASSIGN_IN_GENERATE, $<ltype>3, $4);
+          $$ = build_stmt (CONT_ASSIGN_IN_GENERATE, NULL_TREE, $4);
           if ( in_generate == 0 ) {
               MODULE_ASSIGNMENTS (current_module) =
                 chainon ($4, MODULE_ASSIGNMENTS (current_module));
@@ -3024,6 +3027,7 @@ generate_block
 		}
 	| BEGIN ':' IDENTIFIER
 		{ tmp_tree = make_node (NAMED_BLOCK);
+          in_generate_block = 1;
 		  BLOCK_DOWN (current_scope) = chainon (tmp_tree, BLOCK_DOWN (current_scope));
 		  BLOCK_UP (tmp_tree) = current_scope;
 		  BLOCK_NAME (tmp_tree) = $3;
@@ -3041,6 +3045,7 @@ generate_block
 		  STMT_BODY ($<ttype>4) = nreverse (chainon (tmp_tree, $6));
 		  current_scope = pop_scope ();
 		  $$ = $<ttype>4;
+          in_generate_block = 0;
 		}
     ;
 
@@ -3054,6 +3059,10 @@ generate_sub
     : always_statement
     | initial_statement
     | continuous_assign
+    | net_declaration
+      { if ( in_generate_block == 0 )
+          printf_error_V("line: %lu, Net declaration in Non-named block !\n", lineno);
+      }
     | UDP_or_module_instantiation
     | generate_if
     ;
