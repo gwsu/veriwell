@@ -605,14 +605,24 @@ void init_sysfunction(tree node)
 	break;
 
     case F_FOPEN:
-	if (!args_one(num_args, "$fopen"))
-	    break;
+	if (num_args > 2) {
+    error("Illegal arguments in $open", NULL, NULL);
+	break;
+    }
 
+    t = FUNC_REF_ARGS(node);
 	FUNC_REF_INASSIGN(node) = build_tree_list((tree)
-						  pass3_expr_intrude
-						  (TREE_PURPOSE
-						   (FUNC_REF_ARGS(node)),
-						   1), NULL_TREE);
+						  pass3_expr_intrude(TREE_PURPOSE(t), 1),
+                          NULL_TREE);
+
+    t = TREE_CHAIN(t);
+    if (t)
+    if (is_string(TREE_EXPR(t))) {
+    TREE_CHAIN(FUNC_REF_INASSIGN(node)) =
+        build_tree_list((tree)
+        pass3_expr_intrude(TREE_EXPR(t), 1),
+        NULL_TREE);
+    }
 
 	TREE_NBITS(node) = 32;
 	if (!sysopen_once) {
@@ -1424,13 +1434,32 @@ void exec_sysfunc(tree node, nbits_t nbits)
 	eval_nbits(sysrealtime_return, nbits);
 	break;
     case F_FOPEN:
-	eval((tree *) TREE_PURPOSE(FUNC_REF_INASSIGN(node)));
+	//eval((tree *) TREE_PURPOSE(FUNC_REF_INASSIGN(node)));
 	{
 	    unsigned_32_t handle;
 	    extern char *token_buffer;
+        tree arg;
+        char * file_name;
 
-	    bits_to_string(token_buffer, *--R, R_nbits);
-	    handle = fopen_V(token_buffer);
+        arg = FUNC_REF_INASSIGN(node);	/* 1st arg: file name */
+        eval((tree *)TREE_PURPOSE(arg));
+        bits_to_string(token_buffer, *--R, R_nbits);
+        file_name = (char *) xmalloc((strlen(token_buffer) + 1)
+                         * sizeof(char));
+        strcpy(file_name, token_buffer);
+
+        arg = TREE_CHAIN(arg);	/* 2nd arg: mode */
+        if (arg) {
+        eval((tree *)TREE_PURPOSE(arg));
+        bits_to_string(token_buffer, *--R, R_nbits);
+	    handle = fopen_V(file_name, token_buffer);
+        } else {
+        warning
+		("NO mode argument in $fopen(fp, mode)",
+		 NULL_CHAR, NULL_CHAR);
+	    handle = fopen_V(file_name, "w+t");
+        }
+
 	    AVAL(DECL_STORAGE(sysopen_return)) = handle;
 	    BVAL(DECL_STORAGE(sysopen_return)) = 0;
 	    eval_nbits(sysopen_return, nbits);

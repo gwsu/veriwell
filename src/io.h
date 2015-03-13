@@ -51,7 +51,7 @@ void fprintf_V(handle_t, char *, ...);
 void vprintf_V_log(char *, va_list);
 void vprintf_V(char *, va_list);
 void vfprintf_V(handle_t, char *, va_list);
-handle_t fopen_V(char *);
+handle_t fopen_V(char *, char *);
 handle_t check_handle(handle_t);
 void fclose_V(handle_t);
 //tree  check_library (char *, int);

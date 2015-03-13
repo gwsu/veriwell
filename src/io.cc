@@ -87,7 +87,7 @@ void fclose_V(handle_t handle)
 
 /* Open a file, assign one of 31 bits to the handle of the file */
 
-handle_t fopen_V(char *file)
+handle_t fopen_V(char *file, char *fmt)
 {
     int i;
     FILE *f_handle;
@@ -101,7 +101,7 @@ handle_t fopen_V(char *file)
 		NULL_CHAR);
 	return 0;
     }
-    f_handle = shell_fopen(file, "w+t");
+    f_handle = shell_fopen(file, fmt);
     if (!f_handle) {
 	warning("Cannot open file '%s'", file, NULL_CHAR);
 	return 0;
