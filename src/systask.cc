@@ -74,6 +74,9 @@ tree sysrand_return;		/* variable for returning $random value */
 int syssscanf_once = 0;		/* initialize the following only once */
 tree syssscanf_return;		/* variable for returning $sscanf value */
 
+int sysfscanf_once = 0;		/* initialize the following only once */
+tree sysfscanf_return;		/* variable for returning $fscanf value */
+
 int sysplus_once = 0;		/* initialize the following only once */
 tree sysplus_return;		/* variable for returning $test$plusargs value */
 
@@ -169,6 +172,7 @@ struct sysfunction_info sysfunction_info[] = {
     "$fopen", F_FOPEN,
     "$random", F_RANDOM,
     "$sscanf", F_SSCANF,
+    "$fscanf", F_FSCANF,
     "$test$plusargs", F_TEST_PLUSARGS,
     0, (enum sysfunction_type) 0
 };
@@ -609,6 +613,7 @@ void init_sysfunction(tree node)
 	break;
 
     case F_SSCANF:
+    case F_FSCANF:
 	if (num_args != 3) {
 	    error("Illegal arguments in %s()", FUNC_REF_NAME(node), NULL_CHAR);
 	    break;
@@ -620,10 +625,18 @@ void init_sysfunction(tree node)
     }
 
 	TREE_NBITS(node) = 1;
+    if (FUNC_REF_SYSTYPE(node) == F_SSCANF) {
 	if (!syssscanf_once) {
 	    syssscanf_return =
 		init_function_return("$sscanf", 1, REG_SCALAR_DECL);
 	    syssscanf_once = 1;
+	}
+    }
+    else
+	if (!sysfscanf_once) {
+	    sysfscanf_return =
+		init_function_return("$fscanf", 1, REG_SCALAR_DECL);
+	    sysfscanf_once = 1;
 	}
     break;
 
@@ -1516,6 +1529,13 @@ void exec_sysfunc(tree node, nbits_t nbits)
         eval_nbits(syssscanf_return, nbits);
 	break;
 
+    case F_FSCANF :
+        AVAL(DECL_STORAGE(sysfscanf_return)) = 0;
+        BVAL(DECL_STORAGE(sysfscanf_return)) = 0;
+        do_fscanf(node);
+        eval_nbits(sysfscanf_return, nbits);
+	break;
+
     case F_TEST_PLUSARGS:
 	eval((tree *) TREE_PURPOSE(FUNC_REF_INASSIGN(node)));
 	{
@@ -2173,6 +2193,25 @@ void do_sscanf(tree node)
         do_sscanf1(node, token_buffer);
 }
 
+void do_fscanf(tree node)
+{
+    tree arg;
+    extern char *token_buffer;	/* defined in lex.c */
+    handle_t handle;
+
+    lineno = FUNC_REF_LINE(node);
+    arg = FUNC_REF_ARGS(node);	/* 1st arg: string var */
+
+    handle = get_handle(TREE_EXPR_CODE(arg));
+	if (fscanf(handle2pt(handle), "%s", token_buffer) == EOF) {
+    AVAL(DECL_STORAGE(sysfscanf_return)) = 0;
+    return;
+    }
+
+    AVAL(DECL_STORAGE(sysfscanf_return)) =
+        do_sscanf1(node, token_buffer);
+}
+
 /**************************************************************
  *
  *	do_stop
@@ -2224,6 +2263,7 @@ void init_systask_1()
     sysopen_once = 0;		/* initialize the following only once */
     sysrand_once = 0;
     syssscanf_once = 0;
+    sysfscanf_once = 0;
     sysrealtime_once = 0;	/* initialize the following only once */
     sysplus_once = 0;		/* initialize the following only once */
     monitor_info.enable = 1;
@@ -2233,6 +2273,7 @@ void init_systask_1()
     sysopen_return = NULL_TREE;
     sysrand_return = NULL_TREE;
     syssscanf_return = NULL_TREE;
+    sysfscanf_return = NULL_TREE;
     sysrealtime_return = NULL_TREE;
     sysplus_return = NULL_TREE;
     roFlag = FALSE;

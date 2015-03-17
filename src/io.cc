@@ -132,6 +132,26 @@ handle_t check_handle(handle_t handle)
     return handle;
 }
 
+FILE * handle2pt(handle_t handle)
+{
+    int i;
+    handle_t tmp_handle;
+
+    /* Only check for file handles */
+    if (handle - 1) {
+	tmp_handle = handle >> 1;
+	for (i = 0; i < NHANDLES; i++)
+	    if (tmp_handle >> i & 1)
+            if (!file_used[i]) {
+                warning("File not open", NULL_CHAR, NULL_CHAR);
+                return NULL;
+            } else {
+                return file_handles[i];
+            }
+    }
+    return NULL;
+}
+
 void fflush_V(handle_t handle)
 {
     int i;
