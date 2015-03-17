@@ -104,6 +104,7 @@ enum sysfunction_type {
     F_REALTIME,
     F_FOPEN,
     F_RANDOM,
+    F_SSCANF,
     F_TEST_PLUSARGS,
     SYSTEM_FUNC,
     USER_FUNC,
@@ -146,6 +147,7 @@ tree print_next_arg(handle_t handle, tree node, enum radii radix,
 		    tree);
 void broadcast_tf(int reason);
 void showvar(tree decl);
+void do_sscanf(tree node);
 void do_readmem(tree node, enum radii radix);
 void init_systask_1(void);
 

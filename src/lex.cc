@@ -466,6 +466,7 @@ static tree parse_base_const(nbits_t length)
 
 //  p1 = p - 1;
     p1 = token_buffer + offset + numchars - 1;
+    if (base == DEC)  p1 = p;
 
     t = build_bit_cst(length, base);
 
@@ -713,8 +714,8 @@ parse_base_const1g(enum radii base, char *p1, nbits_t length,
 	}
 	overflow = 0;
 	carry = 0;
-	for (i = 0; i < numchars; ++i) {
-	    char c = *p++;
+	for (i = 0; i < numchars; ++i, p1++) {
+	    char c = *p1;
 	    unsigned carry = 0;
 	    unsigned x2l;
 	    unsigned x4l;

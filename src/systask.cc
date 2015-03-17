@@ -71,6 +71,9 @@ tree sysopen_return;		/* variable for returning $fopen value */
 int sysrand_once = 0;		/* initialize the following only once */
 tree sysrand_return;		/* variable for returning $random value */
 
+int syssscanf_once = 0;		/* initialize the following only once */
+tree syssscanf_return;		/* variable for returning $sscanf value */
+
 int sysplus_once = 0;		/* initialize the following only once */
 tree sysplus_return;		/* variable for returning $test$plusargs value */
 
@@ -165,6 +168,7 @@ struct sysfunction_info sysfunction_info[] = {
     "$realtime", F_REALTIME,
     "$fopen", F_FOPEN,
     "$random", F_RANDOM,
+    "$sscanf", F_SSCANF,
     "$test$plusargs", F_TEST_PLUSARGS,
     0, (enum sysfunction_type) 0
 };
@@ -603,6 +607,25 @@ void init_sysfunction(tree node)
 	    sysrand_once = 1;
 	}
 	break;
+
+    case F_SSCANF:
+	if (num_args != 3) {
+	    error("Illegal arguments in %s()", FUNC_REF_NAME(node), NULL_CHAR);
+	    break;
+	}
+
+	for (t = FUNC_REF_ARGS(node); t; t = TREE_CHAIN(t)) {
+	    if (TREE_EXPR(t))
+		TREE_EXPR_CODE(t) = pass3_expr_intrude(TREE_EXPR(t), 1);
+    }
+
+	TREE_NBITS(node) = 1;
+	if (!syssscanf_once) {
+	    syssscanf_return =
+		init_function_return("$sscanf", 1, REG_SCALAR_DECL);
+	    syssscanf_once = 1;
+	}
+    break;
 
     case F_FOPEN:
 	if (num_args > 2) {
@@ -1485,6 +1508,14 @@ void exec_sysfunc(tree node, nbits_t nbits)
 	    eval_nbits(sysrand_return, nbits);
 	}
 	break;
+
+    case F_SSCANF :
+        AVAL(DECL_STORAGE(syssscanf_return)) = 0;
+        BVAL(DECL_STORAGE(syssscanf_return)) = 0;
+        do_sscanf(node);
+        eval_nbits(syssscanf_return, nbits);
+	break;
+
     case F_TEST_PLUSARGS:
 	eval((tree *) TREE_PURPOSE(FUNC_REF_INASSIGN(node)));
 	{
@@ -2074,6 +2105,74 @@ void do_readmem(tree node, enum radii radix)
     fin = save_fin;
 }
 
+int do_sscanf1(tree node, char * str)
+{
+    tree arg, decl, cst_node;
+    nbits_t length, numchars;
+
+    char fmt[256];
+    enum radii base;
+    char *c;
+
+    arg = FUNC_REF_ARGS(node);	/* 1st arg: file handle */
+
+    numchars = strlen(str);
+    arg = TREE_CHAIN(arg);	/* 2nd arg: format string */
+    eval(TREE_EXPR_CODE(arg));
+    bits_to_string(fmt, *--R, R_nbits);
+
+    c = fmt;
+    while(*c != '\0'){
+        *c = toupper(*c);
+        c++;
+    }
+
+    c = str + numchars - 1;
+    if (strcmp(fmt, "%D") == 0) {
+    base = DEC;
+    c = str;
+    }
+    else if (strcmp(fmt, "%H") == 0)
+    base = HEX;
+    else if (strcmp(fmt, "%B") == 0)
+    base = BIN;
+    else if (strcmp(fmt, "%O") == 0)
+    base = OCT;
+    else {
+    error("format supports only one of the '%%B, %%b, %%O, %%o, %%D, %%d, %%H, %%h' in %s",
+    FUNC_REF_NAME(node), NULL_CHAR);
+    return 0;
+    }
+
+    arg = TREE_CHAIN(arg);	/* 3rd arg: var name */
+    decl = TREE_PURPOSE(arg);
+    if (HIERARCHICAL_ATTR(decl))
+	decl = resolve_hierarchical_name(decl);
+
+    cst_node = build_bit_cst(TREE_NBITS(decl), base);
+    length = TREE_NBITS(decl);
+
+    parse_base_const1(base, c, length, numchars, cst_node);
+	eval_1(cst_node);
+	store(decl, cst_node);
+
+    return 1;
+}
+
+void do_sscanf(tree node)
+{
+    tree arg;
+    extern char *token_buffer;	/* defined in lex.c */
+
+    lineno = FUNC_REF_LINE(node);
+    arg = FUNC_REF_ARGS(node);	/* 1st arg: string var */
+    eval(TREE_EXPR_CODE(arg));
+    bits_to_string(token_buffer, *--R, R_nbits);
+
+    AVAL(DECL_STORAGE(syssscanf_return)) =
+        do_sscanf1(node, token_buffer);
+}
+
 /**************************************************************
  *
  *	do_stop
@@ -2123,17 +2222,19 @@ void init_systask_1()
     systime_once = 0;		/* initialize the following only once */
     sysstime_once = 0;		/* initialize the following only once */
     sysopen_once = 0;		/* initialize the following only once */
-    sysrand_once = 0;
+    sysrand_once = 0;
+    syssscanf_once = 0;
     sysrealtime_once = 0;	/* initialize the following only once */
-    sysplus_once = 0;		/* initialize the following only once */
-    monitor_info.enable = 1;
+    sysplus_once = 0;		/* initialize the following only once */
+    monitor_info.enable = 1;
     monitor_info.node = NULL_TREE;
     systime_return = NULL_TREE;
     sysstime_return = NULL_TREE;
     sysopen_return = NULL_TREE;
-    sysrand_return = NULL_TREE;
+    sysrand_return = NULL_TREE;
+    syssscanf_return = NULL_TREE;
     sysrealtime_return = NULL_TREE;
-    sysplus_return = NULL_TREE;
-    roFlag = FALSE;
+    sysplus_return = NULL_TREE;
+    roFlag = FALSE;
     pliInstanceList = NULL_TREE;
-}
+}
