@@ -474,6 +474,8 @@ struct tree_list {
 #define BIT_EXPR(NODE) ((NODE)->exp.operands[1].exp)
 #define BIT_EXPR_CODE(NODE) ((NODE)->exp.operands[2].exp_code)
 #define BIT_REF_NAME(NODE) ((NODE)->exp.operands[3].exp)
+#define BIT_REF_4(NODE) ((NODE)->exp.operands[4].exp)
+#define BIT_REF_5(NODE) ((NODE)->exp.operands[5].exp)
 
 #define ARRAY_REF_DECL(NODE) ((NODE)->exp.operands[0].exp)
 #define ARRAY_EXPR(NODE) ((NODE)->exp.operands[1].exp)

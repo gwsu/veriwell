@@ -610,6 +610,14 @@ printf("debug : j=%d, i=%d\n",
 	    TREE_NBITS(node) = nbits * CONCAT_COUNT(node);
 	break;
 
+    case ARRAY_BIT_REF:
+    t = BIT_REF_DECL(node);
+    TREE_NBITS(t) = fixup_reference(t);
+    TREE_SET_CODE(node, BIT_REF);
+    TREE_NBITS(node) = fixup_reference(node);
+    BIT_REF_4(node) = (tree)eval_1(t);
+    break;
+
     case PART_REF:
 	if (HIERARCHICAL_ATTR(node)) {
 	    PART_DECL(node) = resolve_hierarchical_name(PART_NAME(node));

@@ -2148,7 +2148,13 @@ lval_normal
 		{ $$ = check_lval ($1, lval_type, current_spec); }
 	| identifier '[' ident_array_index ']'
 		{ $$ = build_bit_ref (
-			check_lval_nocheck ($1, lval_type, current_spec), $3); }
+                check_lval_nocheck ($1, lval_type, current_spec), $3);
+          if (tmp_tree) {
+            REFERENCED_ATTR($$) = 1;
+            $$ = build_bit_ref ($$, tmp_tree);
+            tmp_tree = NULL_TREE;
+          }
+        }
 	| identifier '[' ident_array_index ':' constant_expression ']'
         { if (!tmp_tree) {
               if (!TREE_CONSTANT_ATTR ($3)) {
@@ -2809,7 +2815,13 @@ primary_ident
 	: identifier //%prec LOWEST
 		{ $$ = check_rval ($1); }
 	| identifier '[' ident_array_index ']'
-		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3); }
+		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3);
+          if (tmp_tree) {
+            REFERENCED_ATTR($$) = 1;
+            $$ = build_bit_ref ($$, tmp_tree);
+            tmp_tree = NULL_TREE;
+          }
+        }
 	| identifier '[' ident_array_index ':' constant_expression ']'
         { if (!tmp_tree) {
             if (!TREE_CONSTANT_ATTR ($3)) {

@@ -459,7 +459,8 @@ DEFTREECODE (HIERARCHICAL_REF, "hierarchical_ref", "r", 1)
 DEFTREECODE (ARRAY_REF, "array_ref", "r", 4)
 
 /* Bit-select.  Operand 0 is the register or net, operand 1 is the index. */
-DEFTREECODE (BIT_REF, "bit_ref", "r", 4)
+DEFTREECODE (BIT_REF, "bit_ref", "r", 6)
+DEFTREECODE (ARRAY_BIT_REF, "array_bit_ref", "r", 6)
 
 /* Part-select.  Operand 0 is the register or net.
    PART_DECL is the pointer to the referenced decl node.

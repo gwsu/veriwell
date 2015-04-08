@@ -246,6 +246,9 @@ void store(tree lval, tree pc)
 	nbits = R_nbits;	/* save these */
 	ngroups = R_ngroups;
 	eval(BIT_EXPR_CODE(lval));
+    if (TREE_CODE(BIT_REF_DECL(lval)) == ARRAY_REF) {
+    DECL_STORAGE(BIT_REF_DECL(lval)) = (Group *)BIT_REF_4(lval);
+    }
 	g2 = DECL_STORAGE(BIT_REF_DECL(lval));
 //      g1 = *--R; /* points to index */
 
@@ -265,6 +268,9 @@ void store(tree lval, tree pc)
 	    cond = X;
 	{
 	    tree decl = BIT_REF_DECL(lval);
+        if (TREE_CODE(decl) == ARRAY_REF) {
+            decl = ARRAY_REF_DECL(BIT_REF_DECL(lval));
+        }
 	    nbits_t decl_lsb = LSB(decl);
 	    nbits_t decl_msb = MSB(decl);
 	    Bit aval = AVAL(g1);
@@ -358,6 +364,10 @@ void store(tree lval, tree pc)
       bit_ref_end:
 	R_nbits = nbits;	/* restore original values in case trace */
 	R_ngroups = ngroups;	/*  need them. */
+
+    if (TREE_CODE(BIT_REF_DECL(lval)) == ARRAY_REF) {
+    notify(ARRAY_REF_DECL(BIT_REF_DECL(lval)), new_state, changed, pc);
+    } else
 	notify(BIT_REF_DECL(lval), new_state, changed, pc);
 	break;
 

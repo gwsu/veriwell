@@ -528,6 +528,12 @@ tree build_bit_ref(tree decl, tree index)
 	TREE_LABEL(node) = TREE_LABEL(index);
 	TREE_SUB_LABEL(node) = TREE_SUB_LABEL(index);
 	return node;
+    case (ARRAY_REF):
+    node = build_nt(BIT_REF, decl, index, NULL_TREE, ARRAY_REF_NAME(decl));
+    TREE_LABEL(node) = TREE_LABEL(index);
+    TREE_SUB_LABEL(node) = TREE_SUB_LABEL(index);
+    TREE_SET_CODE(node, ARRAY_BIT_REF);
+    return node;
     case (ARRAY_DECL):
 	node = build_nt(ARRAY_REF, decl, index, NULL_TREE, ident);
 	TREE_LABEL(node) = TREE_LABEL(index);

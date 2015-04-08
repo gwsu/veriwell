@@ -611,6 +611,9 @@ Group *eval(tree * pc)
 	case BIT_REF:
 	    /* evaluate the index */
 	    eval_and_retain_flags(BIT_EXPR_CODE(t));
+        if (TREE_CODE(BIT_REF_DECL(t)) == ARRAY_REF) {
+        DECL_STORAGE(BIT_REF_DECL(t)) = (Group *)BIT_REF_4(t);
+        }
 	    g2 = DECL_STORAGE(BIT_REF_DECL(t));
 	    cond = ZERO;
 	    g1 = *--R;
@@ -620,6 +623,9 @@ Group *eval(tree * pc)
 	    }
 	    {
 		tree decl = BIT_REF_DECL(t);
+        if (TREE_CODE(decl) == ARRAY_REF) {
+            decl = ARRAY_REF_DECL(BIT_REF_DECL(t));
+        }
 		nbits_t decl_lsb = LSB(decl);
 		nbits_t decl_msb = MSB(decl);
 		Bit aval = AVAL(g1);
