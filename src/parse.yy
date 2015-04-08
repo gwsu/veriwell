@@ -141,7 +141,7 @@ void init_parse()
 }
 
 %}
-%pure_parser
+%pure-parser
 
 %union {
 	tree	ttype;	/* pointer to a tree node */
@@ -408,7 +408,7 @@ void init_parse()
 %type	<ttype>	mintypmax_expression
 %type	<ttype>	mintypmax_expression_triplet
 %type	<ttype>	expression expressing
-%type	<ttype>	primary primary_ident
+%type	<ttype>	primary primary_ident ident_array_index
 %type	<ttype>	concatenation
 %type	<ttype>	function_call
 %type	<ttype>	identifier
@@ -2146,16 +2146,35 @@ lvalue
 lval_normal
 	: identifier
 		{ $$ = check_lval ($1, lval_type, current_spec); }
-	| identifier '[' expression ']'
+	| identifier '[' ident_array_index ']'
 		{ $$ = build_bit_ref (
 			check_lval_nocheck ($1, lval_type, current_spec), $3); }
-	| identifier '[' expression ':' expression ']'
-		{ $$ = build_part_ref (
-			check_lval_nocheck ($1, lval_type, current_spec), $3, $5); }
-	| identifier '[' expression PART_SELECT_PLUS constant_expression ']'
-		{ $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, PLUS_EXPR); }
-	| identifier '[' expression PART_SELECT_MINUS constant_expression ']'
-		{ $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, MINUS_EXPR); }
+	| identifier '[' ident_array_index ':' constant_expression ']'
+        { if (!tmp_tree) {
+              if (!TREE_CONSTANT_ATTR ($3)) {
+                error ("Illegal non-constant expression", NULL_CHAR, NULL_CHAR);
+                $$ = error_mark_node;
+              } else
+		        $$ = build_part_ref (
+                    check_lval_nocheck ($1, lval_type, current_spec), $3, $5);
+          }
+          else {
+              if (!TREE_CONSTANT_ATTR (tmp_tree)) {
+                error ("Illegal non-constant expression", NULL_CHAR, NULL_CHAR);
+                $$ = error_mark_node;
+              } else {
+                $$ = build_bit_ref (
+                    check_lval_nocheck ($1, lval_type, current_spec), $3);
+                REFERENCED_ATTR($$) = 1;
+                $$ = build_part_ref ($$, tmp_tree, $5);
+              }
+              tmp_tree = NULL_TREE;
+          }
+        }
+	| identifier '[' ident_array_index PART_SELECT_PLUS constant_expression ']'
+		{ $$ = build_part_select_ref (check_lval_nocheck ($1, lval_type, current_spec), $3, $5, PLUS_EXPR); }
+	| identifier '[' ident_array_index PART_SELECT_MINUS constant_expression ']'
+		{ $$ = build_part_select_ref (check_lval_nocheck ($1, lval_type, current_spec), $3, $5, MINUS_EXPR); }
 	;
 
 
@@ -2787,17 +2806,44 @@ primary
 	;
 
 primary_ident
-	: identifier %prec LOWEST
+	: identifier //%prec LOWEST
 		{ $$ = check_rval ($1); }
-	| identifier '[' expression ']'
+	| identifier '[' ident_array_index ']'
 		{ $$ = build_bit_ref (check_rval_nocheck ($1), $3); }
-	| identifier '[' constant_expression ':' constant_expression ']'
-		{ $$ = build_part_ref (check_rval_nocheck ($1), $3, $5); }
-	| identifier '[' expression PART_SELECT_PLUS constant_expression ']'
+	| identifier '[' ident_array_index ':' constant_expression ']'
+        { if (!tmp_tree) {
+            if (!TREE_CONSTANT_ATTR ($3)) {
+              error ("Illegal non-constant expression", NULL_CHAR, NULL_CHAR);
+              $$ = error_mark_node;
+            } else
+		      $$ = build_part_ref (check_rval_nocheck ($1), $3, $5);
+          }
+          else {
+            if (!TREE_CONSTANT_ATTR (tmp_tree)) {
+              error ("Illegal non-constant expression", NULL_CHAR, NULL_CHAR);
+              $$ = error_mark_node;
+            } else {
+		      $$ = build_bit_ref (check_rval_nocheck ($1), $3);
+              REFERENCED_ATTR($$) = 1;
+		      $$ = build_part_ref ($$, tmp_tree, $5);
+            }
+            tmp_tree = NULL_TREE;
+          }
+        }
+	| identifier '[' ident_array_index PART_SELECT_PLUS constant_expression ']'
 		{ $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, PLUS_EXPR); }
-	| identifier '[' expression PART_SELECT_MINUS constant_expression ']'
+	| identifier '[' ident_array_index PART_SELECT_MINUS constant_expression ']'
 		{ $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, MINUS_EXPR); }
 	;
+
+ident_array_index
+    : expression
+        { tmp_tree = NULL_TREE;
+        }
+    | ident_array_index ']' '[' expression
+        { tmp_tree = $4;
+        }
+    ;
 
 /*
 NUMBER

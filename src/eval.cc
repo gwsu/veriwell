@@ -360,13 +360,13 @@ Group *eval_(tree * pc, nbits_t * nbits)
 
 /* eval a single decl node */
 
-void eval_1(tree decl)
+Group *eval_1(tree decl)
 {
     tree pc[2];
 
     pc[0] = decl;
     pc[1] = NULL_TREE;
-    eval(pc);
+    return eval(pc);
 }
 
 static void eval_and_retain_flags(tree * pc)
@@ -379,7 +379,7 @@ static void eval_and_retain_flags(tree * pc)
     is_real = saved_real_flag;
 }
 
-void eval(tree * pc)
+Group *eval(tree * pc)
 {
     tree t;
     tree t1;
@@ -1987,7 +1987,7 @@ void eval(tree * pc)
 	}			/* switch */
 	pc++;
     }				/* while */
-    return;
+    return g2;
 }
 
 

@@ -570,6 +570,13 @@ tree build_part_ref(tree decl, tree msb, tree lsb)
 	PART_LSB_(tmp) = lsb;
 	PART_NAME(tmp) = PART_DECL(tmp) = decl;
 	return tmp;
+    case (ARRAY_REF):
+	tmp = make_node(PART_REF);
+	PART_MSB_(tmp) = msb;
+	PART_LSB_(tmp) = lsb;
+	PART_NAME(tmp) = ARRAY_REF_NAME(decl);
+	PART_DECL(tmp) = decl;
+	return tmp;
     case (REG_SCALAR_DECL):
     case (NET_SCALAR_DECL):
 	error("'%s' is not a vector", IDENT(ident), NULL_CHAR);

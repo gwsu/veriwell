@@ -619,6 +619,14 @@ printf("debug : j=%d, i=%d\n",
 	    }
 	}
 
+    t = PART_DECL(node);
+    if (TREE_CODE(t)==ARRAY_REF) {
+        fixup_reference(t);
+        PART_DECL(node) = ARRAY_REF_DECL(t);
+        val = eval_1(t);
+    } else
+        val = DECL_STORAGE(PART_DECL(node));
+
 /* If the decl that node is pointing to is a redeclared port, move the pointer
    to the newer decl */
 /*
@@ -659,7 +667,8 @@ printf("debug : j=%d, i=%d\n",
 		    ("Part-select is outside limits set by declaration of '%s'",
 		     IDENT(DECL_NAME(PART_DECL(node))), NULL_CHAR);
 	}
-	PART_STORAGE(node) = DECL_STORAGE(PART_DECL(node))
+	//PART_STORAGE(node) = DECL_STORAGE(PART_DECL(node))
+	PART_STORAGE(node) = val
 	    + (ABS(lsb - lsb_decl)) / BITS_IN_GROUP;
 	PART_INFO(node) =
 	    cook_part_ref(ABS(msb - lsb_decl), ABS(lsb - lsb_decl), 0);

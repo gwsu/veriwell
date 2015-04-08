@@ -63,8 +63,8 @@
 int part_lref(Group * g1, Group * g2, struct part_info *info);
 ngroups_t part_rref(Group * g1, Group * g2, struct part_info *info);
 Group *eval_(tree * pc, nbits_t * nbits);
-void eval_1(tree decl);
-void eval(tree * pc);
+Group *eval_1(tree decl);
+Group *eval(tree * pc);
 delay_t eval_delay(tree delay_node, enum logical_value state);
 void do_net_eval(tree node, int exclude_inout, tree exclude_tree);
 int R_alloc(int number, int area);
