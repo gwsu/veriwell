@@ -2178,9 +2178,25 @@ lval_normal
           }
         }
 	| identifier '[' ident_array_index PART_SELECT_PLUS constant_expression ']'
-		{ $$ = build_part_select_ref (check_lval_nocheck ($1, lval_type, current_spec), $3, $5, PLUS_EXPR); }
+        { if (!tmp_tree) {
+            $$ = build_part_select_ref (check_lval_nocheck ($1, lval_type, current_spec), $3, $5, PLUS_EXPR);
+          } else {
+            $$ = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), $3);
+            REFERENCED_ATTR($$) = 1;
+            $$ = build_part_select_ref ($$, tmp_tree, $5, PLUS_EXPR);
+            tmp_tree = NULL_TREE;
+          }
+        }
 	| identifier '[' ident_array_index PART_SELECT_MINUS constant_expression ']'
-		{ $$ = build_part_select_ref (check_lval_nocheck ($1, lval_type, current_spec), $3, $5, MINUS_EXPR); }
+        { if (!tmp_tree) {
+            $$ = build_part_select_ref (check_lval_nocheck ($1, lval_type, current_spec), $3, $5, MINUS_EXPR);
+          } else {
+            $$ = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), $3);
+            REFERENCED_ATTR($$) = 1;
+            $$ = build_part_select_ref ($$, tmp_tree, $5, MINUS_EXPR);
+            tmp_tree = NULL_TREE;
+          }
+        }
 	;
 
 
@@ -2843,9 +2859,25 @@ primary_ident
           }
         }
 	| identifier '[' ident_array_index PART_SELECT_PLUS constant_expression ']'
-		{ $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, PLUS_EXPR); }
+        { if (!tmp_tree) {
+            $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, PLUS_EXPR);
+          } else {
+		    $$ = build_bit_ref (check_rval_nocheck ($1), $3);
+            REFERENCED_ATTR($$) = 1;
+            $$ = build_part_select_ref ($$, tmp_tree, $5, PLUS_EXPR);
+            tmp_tree = NULL_TREE;
+          }
+        }
 	| identifier '[' ident_array_index PART_SELECT_MINUS constant_expression ']'
-		{ $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, MINUS_EXPR); }
+        { if (!tmp_tree) {
+            $$ = build_part_select_ref (check_rval_nocheck ($1), $3, $5, MINUS_EXPR);
+          } else {
+		    $$ = build_bit_ref (check_rval_nocheck ($1), $3);
+            REFERENCED_ATTR($$) = 1;
+            $$ = build_part_select_ref ($$, tmp_tree, $5, MINUS_EXPR);
+            tmp_tree = NULL_TREE;
+          }
+        }
 	;
 
 ident_array_index

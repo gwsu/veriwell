@@ -619,6 +619,7 @@ tree build_part_select_ref(tree decl, tree starting, tree width, enum tree_code 
     case (NET_VECTOR_DECL):
     case INTEGER_DECL:
     case PARAM_DECL:
+    case (ARRAY_REF):
 	tmp = make_node(PART_SELECT_REF);
 	CONCAT_STARTING(tmp) = starting;
 	CONCAT_EXPR(tmp) = width;
