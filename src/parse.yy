@@ -326,7 +326,7 @@ void init_parse()
 %type	<ttype>	setspec setnetspec static_declaration port_declaration port_spec
 %type	<ttype>	port_decl_identifiers
 %type	<ttype>	reg_spec event_spec reg_decl_identifiers reg_decl_identifier
-%type	<ttype> real_spec
+%type	<ttype> real_spec paratype
 %type	<ttype>	non_reg_decl_identifiers
 %type	<ttype>	decl_identifiers
 
@@ -1036,26 +1036,26 @@ list_of_param_decl_2001
 	;
 
 parameter_declaration_2001
-	: PARAMETER xrange
-		{ current_spec = make_param_spec ($2); }
+	: PARAMETER paratype xrange
+		{ current_spec = make_param_spec ($3); }
 	  list_of_param_assignments list_of_delimit
 		{ BLOCK_DECL (current_scope) =
-			chainon ($4, BLOCK_DECL (current_scope));
+			chainon ($5, BLOCK_DECL (current_scope));
 		}
 	;
 
 parameter_declaration
-	: PARAMETER xrange
-		{ current_spec = make_param_spec ($2); }
+	: PARAMETER paratype xrange
+		{ current_spec = make_param_spec ($3); }
 	  list_of_param_assignments sc
 		{ BLOCK_DECL (current_scope) =
-			chainon ($4, BLOCK_DECL (current_scope));
+			chainon ($5, BLOCK_DECL (current_scope));
 		}
-	| LOCALPARAM xrange
-		{ current_spec = make_param_spec ($2); }
+	| LOCALPARAM paratype xrange
+		{ current_spec = make_param_spec ($3); }
 	  list_of_param_assignments sc
 		{ BLOCK_DECL (current_scope) =
-			chainon ($4, BLOCK_DECL (current_scope));
+			chainon ($5, BLOCK_DECL (current_scope));
 		}
 	;
 
@@ -1219,6 +1219,15 @@ nettype
 	| SUPPLY1
 		{ syn_warning ("SUPPLY1 net"); }
 	;
+
+paratype
+    : /* empty */
+        { $$ = NULL_TREE; }
+	| REAL
+        { $$ = NULL_TREE; }
+    | INTEGER
+        { $$ = NULL_TREE; }
+    ;
 
 /*
 NETTYPE is one of the following keywords
