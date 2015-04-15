@@ -2207,15 +2207,17 @@ A.6 Specify Section
 
 specify_block
 	: SPECIFY
-	{
+	{ warning ("Specify-block is not supported and is ignored", NULL_CHAR, NULL_CHAR);
+      eat_block (ENDSPECIFY);
 	}
 	  specify_stuff
-	{}
+	{ $$ = NULL; }
 	;
 
 /* If specify blocks are disabled, The rest will be eaten by the parser */
 specify_stuff
-	: specify_items ENDSPECIFY
+	//: specify_items ENDSPECIFY
+	: specify_items
 	{}
 	;
 
@@ -2227,7 +2229,7 @@ specify_items
 		    $$ = NULL;	
 		//  $$ = chainon ($2, $1);
 		}
-	| specify_items error
+	//| specify_items error
 	;
 specify_item	
 	: specparam_declaration
