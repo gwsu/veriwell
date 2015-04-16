@@ -2696,7 +2696,7 @@ constant_expression
 	;
 
 mintypmax_expression
-	: constant_expression
+	: expression
 	| constant_expression ':' constant_expression ':' constant_expression
 		{ switch (delay_type) {
 		    case (MIN_DELAY):  $$ = $1; break;
