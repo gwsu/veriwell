@@ -241,8 +241,14 @@ tree check_lval_nocheck(tree node, enum lval_type lval_type, tree spec)
 	if (HIERARCHICAL_ATTR(node)) {
 	    return node;
 	} else {
-	    error("'%s' not declared", IDENT(node), NULL_CHAR);
-	    return error_mark_node;
+        warning ("'%s' not declared, default by NET_SCALAR_DECL", IDENT(node), NULL_CHAR);
+        t = make_net_spec (NET_WIRE_TYPE, NULL_TREE, NULL_TREE);
+        t = make_decl (node, t, NULL_TREE, NULL_TREE);
+        BLOCK_DECL(current_scope) =
+        chainon(t, BLOCK_DECL(current_scope));
+        NET_DELAY(t) = NULL_TREE;
+        TREE_SET_CODE(t, NET_SCALAR_DECL);
+        return t;
 	}
     } else if (t == error_mark_node) {
 	return error_mark_node;
