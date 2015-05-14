@@ -31,11 +31,13 @@ Group *realloc_Z(Group * g, ngroups_t ngroups);
 void pass3_decl(tree decl);
 void build_hierarchy(void);
 void print_top_modules(void);
-void build_hierarchy(void);
+
 void print_top_modules(void);
 void init_pass2();
 tree check_library(char *name);
 
+void initialize_decls(tree scope);
+void do_instantiation(tree node);
 // private methods
 
 #ifdef PASS2_C
@@ -46,8 +48,8 @@ static tree module_lookup(tree instance);
 static void do_connect_ports(tree port, tree arg_tree, tree instance);
 static void connect_ports(tree inside, tree outside);
 static void resolve_defparams(tree scope);
-static void initialize_decls(tree scope);
-static void do_instantiation(tree node);
+//static void initialize_decls(tree scope);
+//static void do_instantiation(tree node);
 
 #endif				// PASS2_C
 

@@ -1536,6 +1536,7 @@ UDP_or_module_instantiation
 		{ current_instance_module = NULL_TREE;
 		  current_instance_param = NULL_TREE;
 		  in_instantiation = 0;
+          $$ = $4;
 		}
 
 	/* OR is a keyword, treat it seperately */
@@ -1676,16 +1677,22 @@ module_instance
 		{ $$ = build_stmt (INSTANCE_NODE, lineno, check_non_reg ($1),
 				current_instance_module,
 				nreverse ($3), current_instance_param);
+          if ( in_generate == 0 ) {
 		  MODULE_INSTANCES (current_module) = chainon ($$,
 				MODULE_INSTANCES (current_module));
 		//  make_block_decl ($1, current_module, NULL_TREE);
+          } else
+          $$ = build_stmt (INSTANCE_IN_GENERATE, NULL_TREE, $$);
 		}
 	| '(' list_of_module_connections_o rp
 		{ $$ = build_stmt (INSTANCE_NODE, lineno, NULL_TREE,
 				current_instance_module,
 				nreverse ($2), current_instance_param);
+          if ( in_generate == 0 ) {
 		  MODULE_INSTANCES (current_module) = chainon ($$,
 				MODULE_INSTANCES (current_module));
+          } else
+          $$ = build_stmt (INSTANCE_IN_GENERATE, NULL_TREE, $$);
 		}
 	;
 

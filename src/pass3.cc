@@ -54,6 +54,7 @@ extern tree current_scope;
 
 tree *debug_;
 tree debug_tree;
+tree pass3_again;
 
 static int in_lval = 0;		/* set if processing lvalue (used in concat) */
 static int in_connect_ports = 0;	/* set if building port connections */
@@ -1726,6 +1727,30 @@ void pass3_node_tail(tree node, tree label)
 	    }
         break;
 
+        case (INSTANCE_IN_GENERATE):
+        t = STMT_BODY(node);
+        if (TREE_CODE(t) == INSTANCE_NODE && !UDP_ATTR(t)) {
+        tmp_tree = module_of(current_scope);
+        MODULE_INSTANCES (tmp_tree) = chainon (t,
+				MODULE_INSTANCES (tmp_tree));
+//printf("up-module = %s, inst = %s, inst-module = %s\n",
+//  MODULE_NAME(tmp_tree), IDENT(INSTANCE_NAME(t)), IDENT(INSTANCE_MODULE_NAME(t)) );
+        set_scope(tmp_tree);
+        do_instantiation(tmp_tree);
+        current_scope = pop_scope();
+/* Do this after all top-levels are resolved so that hierarchical defparams
+   can be accurately located */
+        for (t1 = tmp_tree; t1; t1 = TREE_CHAIN(t1))
+        initialize_decls(t1);
+
+        pass3_again = tree_cons (t, NULL_TREE, pass3_again);
+        //pass3_node(INSTANCE_BLOCK(t));
+        }
+        else
+            error("generate-instance NOT recognition", NULL_CHAR, NULL_CHAR);
+
+        break;
+
 	    case (IF_STMT):
 //HEAPTEST ("Heap corrupted (in pass3 -- if)");
 		STMT_COND_CODE(node) = pass3_expr(STMT_COND(node));
@@ -2035,9 +2060,14 @@ void pass3_tree(tree node)
     finish_scb = BuildSCB(finish_stmt, NOLIST);
     dump = build_stmt(DUMP_STMT, NULL);
     dummy_return = build_stmt(DUMMY_RETURN_STMT, NULL);
+    pass3_again = NULL_TREE;
 
     for (t = node; t; t = TREE_CHAIN(t))
 	pass3_node(t);
+
+    // patch for IN_GENERATE_INSTANCE
+    for (t = pass3_again; t; t = TREE_CHAIN(t))
+    pass3_node(INSTANCE_BLOCK(TREE_PURPOSE(t)));
 
     for (t = node; t; t = TREE_CHAIN(t))
 	connect_instances(t);

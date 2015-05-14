@@ -729,7 +729,7 @@ static void resolve_defparams(tree scope)
 /* Initialize all decls in the current scope and all others below.  These
    will be task, functions, and named blocksm and, of course, modules. */
 
-static void initialize_decls(tree scope)
+void initialize_decls(tree scope)
 {
     tree t, t1;
 
@@ -797,7 +797,7 @@ static void initialize_decls(tree scope)
 
 /* recursively link module together hierarchically */
 
-static void do_instantiation(tree node)
+void do_instantiation(tree node)
 {
     tree t, instance;
     int had_to_copy;

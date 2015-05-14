@@ -506,8 +506,11 @@ tree check_block(tree ident)
     tree t = IDENT_CURRENT_DECL(ident);
 
     if (t) {
-	error("Block '%s' previously declared", IDENT(ident), NULL_CHAR);
-	return error_mark_node;
+        if (in_generate == 0) {
+        error("Block '%s' previously declared", IDENT(ident), NULL_CHAR);
+        return error_mark_node;
+        } else
+        warning ("Block '%s' previously declared", IDENT(ident), NULL_CHAR);
     }
     return ident;
 }

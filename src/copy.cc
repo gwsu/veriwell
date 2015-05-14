@@ -549,6 +549,7 @@ tree copy_tree_with_stuff(tree node, tree stuff)
 	    case DEASSIGN_STMT:
 	    case RELEASE_STMT:
 	    case ARROW_STMT:
+	    case INSTANCE_IN_GENERATE:
 		STMT_BODY(new_node) = copy_tree(STMT_BODY(node));
 		break;
 	    case BEGIN_NAMED_STMT:
