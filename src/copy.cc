@@ -136,7 +136,7 @@ static tree copy_instances(tree node)
     for (t = node; t; t = TREE_CHAIN(t)) {
 	new_node = copy_node(t);
 	INSTANCE_PORTS(new_node) = copy_tree(INSTANCE_PORTS(t));
-	INSTANCE_PARAMS(new_node) = copy_tree(INSTANCE_PORTS(t));
+	INSTANCE_PARAMS(new_node) = copy_tree(INSTANCE_PARAMS(t));
 	if (!first) {
 	    first = new_node;
 	} else {
@@ -632,6 +632,7 @@ tree copy_tree_with_stuff(tree node, tree stuff)
 	    case CASE_STMT:
 	    case CASEX_STMT:
 	    case CASEZ_STMT:
+        case GENERATE_CASE_STMT:
 		STMT_CASE_EXPR(new_node) = copy_tree(STMT_CASE_EXPR(node));
 		STMT_CASE_LIST(new_node) = copy_tree(STMT_CASE_LIST(node));
 		STMT_CASE_DEFAULT(new_node) =

@@ -1855,6 +1855,31 @@ void pass3_node_tail(tree node, tree label)
 		}
 		break;
 
+        case GENERATE_CASE_STMT:
+        {
+            int flag = 0;
+            tree tmp1 = STMT_CASE_EXPR(node), tmp2;
+
+            for (t = STMT_CASE_LIST(node); t; t = TREE_CHAIN(t)) {
+                for (t1 = TREE_PURPOSE(t); t1; t1 = TREE_CHAIN(t1)) {
+                    TREE_EXPR_CODE(t1) = pass3_expr(TREE_EXPR(t1));
+                    tmp2 = build_binary_op (EQ_CASE_EXPR, tmp1, TREE_EXPR(t1));
+                    if (test(pass3_expr(tmp2))) {
+                        flag = 1;
+                        break;
+                    }
+                }
+                if (flag == 1) {
+                    pass3_node_tail(TREE_VALUE(t), alt_chain);
+                    break;
+                }
+            }
+
+            if (!flag)
+                pass3_node_tail(STMT_CASE_DEFAULT(node), alt_chain);
+        }
+        break;
+
 	    case DELAY_STMT:
 		pass3_delay_stmt(node);
 		pass3_node_tail(STMT_BODY(node), alt_chain);

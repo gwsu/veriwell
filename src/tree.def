@@ -235,6 +235,7 @@ DEFTREECODE (GENERATE_IF_STMT, "generate_if_stmt", "s", 4)
 DEFTREECODE (CASE_STMT, "case_stmt", "s", 4)
 DEFTREECODE (CASEZ_STMT, "casez_stmt", "s", 4)
 DEFTREECODE (CASEX_STMT, "casex_stmt", "s", 4)
+DEFTREECODE (GENERATE_CASE_STMT, "generate_case_stmt", "s", 4)
 
 /* forever statement.
    STMT_BODY is the list of statements with the loop. */

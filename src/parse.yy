@@ -76,6 +76,7 @@ tree current_spec;
 
 tree current_module;
 tree current_case;
+tree gen_curr_case;
 tree current_delay;
 enum tree_type current_gatetype;
 
@@ -133,6 +134,7 @@ void init_parse()
 	current_spec = NULL_TREE;
 	current_module = NULL_TREE;
 	current_case = NULL_TREE;
+	gen_curr_case = NULL_TREE;
 	current_delay = NULL_TREE;
 	interactive_statement = NULL_TREE;
 	tmp_tree = NULL_TREE;
@@ -376,6 +378,7 @@ void init_parse()
 %type	<ttype>	specify_block
 %type	<ttype>	generate_statement generate_block
 %type	<ttype>	generate_if generate_else
+%type	<ttype>	generate_case gen_case_item_plist gen_case_expr
 %type	<ttype>	generate_sub generate_sub_list
 %type	<ttype>	generate_express generate_express_list
 
@@ -3122,6 +3125,7 @@ generate_express_list
 
 generate_express
     : generate_if
+    | generate_case
     ;
 
 generate_block
@@ -3173,6 +3177,7 @@ generate_sub
       }
     | UDP_or_module_instantiation
     | generate_if
+    | generate_case
     ;
 
 generate_if
@@ -3190,6 +3195,44 @@ generate_else
 		{ $$ = $2; }
 	;
 
+generate_case
+	: 	{ $<ttype>$ = gen_curr_case; }
+	  case
+		{ $<ttype>$ = gen_curr_case =
+            build_stmt (GENERATE_CASE_STMT, stmt_lineno, NULL_TREE, NULL_TREE, NULL_TREE); }
+	  '(' expression rp gen_case_item_plist ENDCASE
+		{ STMT_CASE_EXPR ($<ttype>3) = $5;
+		  STMT_CASE_LIST ($<ttype>3) = nreverse ($7);
+		  gen_curr_case = $<ttype>1;
+		  $$ = $<ttype>3;
+		}
+	;
+
+gen_case_item_plist
+	: gen_case_expr
+	| gen_case_item_plist gen_case_expr
+		{ yyerrok;
+		  $$ = chainon ($2, $1);
+		}
+	| error
+	| gen_case_item_plist error
+	;
+
+gen_case_expr
+	: expression_clist ':' generate_block
+		{ $$ = build_tree_list ($1, $3); }
+
+	| DEFAULT ':' generate_block
+		{ if (STMT_CASE_DEFAULT (gen_curr_case))
+		    error ("More than one 'DEFAULT' within generate-CASE", NULL_CHAR, NULL_CHAR);
+		  STMT_CASE_DEFAULT (gen_curr_case) = $3;
+		}
+	| DEFAULT generate_block
+		{ if (STMT_CASE_DEFAULT (gen_curr_case))
+		    error ("More than one 'DEFAULT' within generate-CASE", NULL_CHAR, NULL_CHAR);
+		  STMT_CASE_DEFAULT (gen_curr_case) = $2;
+		}
+	;
 
 
 /*
