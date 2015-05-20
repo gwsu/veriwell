@@ -1184,8 +1184,9 @@ net_declaration
 	: net_spec setnetspec decl_identifiers sc
 		{ BLOCK_DECL (current_scope) =
 			chainon ($3, BLOCK_DECL (current_scope));
- 			lval_type = LVAL_REG;
+		  lval_type = LVAL_REG;
 		  current_delay = NULL_TREE;
+		  $$ = NULL_TREE;
 		}
 	| trireg_spec setspec decl_identifiers sc
 	| net_spec setnetspec list_of_net_assignments sc
@@ -1194,8 +1195,8 @@ net_declaration
           if ( in_generate == 0 ) {
             MODULE_ASSIGNMENTS (current_module) =
                 chainon ($3, MODULE_ASSIGNMENTS (current_module));
-            current_delay = NULL_TREE;
           }
+          current_delay = NULL_TREE;
 		}
 	;
 
@@ -3150,11 +3151,11 @@ generate_block
 		  push_scope ();
 		  $<ttype>$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno, NULL_TREE, tmp_tree);
 		}
-	  block_declaration_list generate_sub_list END
+	  generate_sub_list END
 		{ tmp_tree = build_stmt (END_NAMED_STMT, stmt_lineno,
 			NULL_TREE, STMT_BLOCK ($<ttype>4));
 		  /* STMT_BEGIN_NAMED_END ($<ttype>4) = tmp_tree; */
-		  STMT_BODY ($<ttype>4) = nreverse (chainon (tmp_tree, $6));
+		  STMT_BODY ($<ttype>4) = nreverse (chainon (tmp_tree, $5));
 		  current_scope = pop_scope ();
 		  $$ = $<ttype>4;
           in_generate_block = 0;
@@ -3171,6 +3172,11 @@ generate_sub
     : always_statement
     | initial_statement
     | continuous_assign
+    | static_declaration
+      { $$ = NULL_TREE;
+        if ( in_generate_block == 0 )
+          printf_error_V("line: %lu, REG declaration in Non-named block !\n", lineno);
+      }
     | net_declaration
       { if ( in_generate_block == 0 )
           printf_error_V("line: %lu, Net declaration in Non-named block !\n", lineno);
