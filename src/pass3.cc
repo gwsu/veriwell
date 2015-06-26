@@ -466,6 +466,7 @@ static nbits_t fixup_reference(tree node)
     nbits_t nbits, nbits1, nbits_decl, prev_nbits;
     Group *val;
     tree t;
+    extern int pass2_init_decl_flag;
 
     switch (code) {
     case BIT_REF:
@@ -686,6 +687,7 @@ printf("debug : j=%d, i=%d\n",
 	break;
 
     case FUNCTION_REF:
+    pass2_init_decl_flag = 1;
 	if (HIERARCHICAL_ATTR(node))
 	    t = search_scope(FUNC_REF_NAME(node), 0);
 	else
@@ -1584,6 +1586,12 @@ if (!pass3_again || TREE_GENERATE(node)) {
 
 	    /* Scan body of task or function. */
 	    if (code == FUNCTION_BLOCK) {
+
+	    if (TREE_LABEL(node)) {
+	    current_scope = pop_scope();
+	    break;
+	    }
+
 		int max_label_save;
 		ngroups_t stack_size_save;
 
@@ -1742,7 +1750,7 @@ if (!pass3_again || TREE_GENERATE(node)) {
         MODULE_INSTANCES (tmp_tree) = chainon (t,
 				MODULE_INSTANCES (tmp_tree));
 //printf("3.1 up-module = %s, inst = %s, inst-module = %s, %x\n",
-//    MODULE_NAME(tmp_tree), IDENT(INSTANCE_NAME(t)), IDENT(INSTANCE_MODULE_NAME(t)), INSTANCE_BLOCK(t) );
+//  MODULE_NAME(tmp_tree), IDENT(INSTANCE_NAME(t)), IDENT(INSTANCE_MODULE_NAME(t)), INSTANCE_BLOCK(t) );
 
         // patch for multi-module in one file
         // delete a node
@@ -1764,18 +1772,14 @@ if (!pass3_again || TREE_GENERATE(node)) {
             } else
             prep = t1;
         }
-//for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) printf("top2 ... %s\n", MODULE_NAME(t1));
+//for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) printf("top3 ... %s\n", MODULE_NAME(t1));
         set_scope(tmp_tree);
         do_instantiation(tmp_tree);
-/* Do this after all top-levels are resolved so that hierarchical defparams
-   can be accurately located */
-        for (t1 = top_level; t1; t1 = TREE_CHAIN(t1))
-        initialize_decls(t1);
+        current_scope = pop_scope();
+        pass3_again++;
 
         //pass3_patch = tree_cons (t, NULL_TREE, pass3_patch);
         //pass3_node(INSTANCE_BLOCK(t));
-        current_scope = pop_scope();
-        pass3_again += 1;
         }
         else
             error("generate-instance NOT recognition", NULL_CHAR, NULL_CHAR);
@@ -2111,6 +2115,7 @@ void connect_instances(tree module)
 void pass3_tree(tree node)
 {
     tree t;
+    extern int pass2_init_decl_again;
 
     tree finish_stmt = build_stmt(FINISH_STMT, NULL);
 
@@ -2124,12 +2129,32 @@ void pass3_tree(tree node)
 
     // patch for IN_GENERATE_INSTANCE
     do {
+        pass3_again = 0;
+
+        // do PARAMETER exclude FUNCTION_REF
+        pass2_init_decl_again = 0;
+//printf("debug init_decl = %d\n", pass2_init_decl_again);
+        for (t = top_level; t; t = TREE_CHAIN(t))
+        initialize_decls(t);
+
+        // do FUNCTION_BLOCK
+        pass2_init_decl_again = 1;
+        for (t = top_level; t; t = TREE_CHAIN(t))
+        initialize_decls(t);
+
+        // do init_decl ALL
+        pass2_init_decl_again = 2;
+        for (t = top_level; t; t = TREE_CHAIN(t))
+        initialize_decls(t);
+
+        // do IN_GENERATE only
         pass3_again = 1;
-        for (t = node; t; t = TREE_CHAIN(t)) {//printf("top 3.8... %s\n", MODULE_NAME(t));
+        for (t = node; t; t = TREE_CHAIN(t)) {
         pass3_node(t);
         }
     } while (pass3_again > 1);
 
+    // do others except IN_GENERATE
     pass3_again = 0;
 //for (t = top_level; t; t = TREE_CHAIN(t)) printf("top 32... %s\n", MODULE_NAME(t));
     for (t = top_level; t; t = TREE_CHAIN(t)) {

@@ -53,6 +53,8 @@ static void parse_at_top_scope(tree scope);
 #define obstack_chunk_free free
 
 
+int pass2_init_decl_again = 0;
+int pass2_init_decl_flag = 0;
 /* This obstack contains pointers to expression/ref/decl nodes in the
    order that they should be evaluated (postfix). */
 extern struct obstack inst_obstack;
@@ -317,6 +319,7 @@ void pass3_decl(tree decl)
 
     case SPECPARAM_DECL:
     case PARAM_DECL:
+    pass2_init_decl_flag = 0;
 	if (!DECL_PARAM_REDIRECT(decl)) {
 	    DECL_PARAM_RVAL_CODE(decl) = pass3_expr(DECL_PARAM_RVAL(decl));
 	    nbits = TREE_NBITS(DECL_PARAM_RVAL(decl));
@@ -362,8 +365,12 @@ void pass3_decl(tree decl)
 		    ("Not enough memory to evaluate parameter expression of '%s'",
 		     IDENT(DECL_NAME(decl)));
 	}
+
+	if (pass2_init_decl_flag == 1 && pass2_init_decl_again == 0) break;
+
 	eval(DECL_PARAM_RVAL_CODE(decl));
 	store(decl, decl);
+//printf("\tparam %s = %d\n", IDENT(DECL_NAME(decl)), AVAL(get_const(decl, &nbits)) );
 	break;
 
     default:
@@ -746,7 +753,10 @@ void initialize_decls(tree scope)
 	}
     }
 
+//printf("initialize_decl ... %s\n", IDENT(BLOCK_NAME(scope)));
+if (pass2_init_decl_again != 1 || TREE_CODE(scope) == FUNCTION_BLOCK) {
     for (t = BLOCK_DECL(scope); t; t = TREE_CHAIN(t)) {
+    if (pass2_init_decl_again == 0 && TREE_CODE(t) != PARAM_DECL) continue;
 	pass3_decl(t);
 	/* process other sources to a net */
 	if (TREE_CODE(t) == NET_VECTOR_DECL ||
@@ -767,6 +777,7 @@ void initialize_decls(tree scope)
     }
 
     for (t = BLOCK_PORTS(scope); t; t = TREE_CHAIN(t)) {
+    if (pass2_init_decl_again == 0) break;
 	if (PORT_REDEFINED_ATTR(t))
 	    continue;
 	pass3_decl(t);
@@ -783,10 +794,12 @@ void initialize_decls(tree scope)
 	}
     }
 
+}
     /* Allocate return variable */
     if (TREE_CODE(scope) == FUNCTION_BLOCK) {
 	pass3_decl(FUNCT_DECL(scope));
 	TREE_NBITS(scope) = TREE_NBITS(FUNCT_DECL(scope));
+    if (pass2_init_decl_again) pass3_node(scope);
     }
 
 
@@ -811,6 +824,7 @@ void do_instantiation(tree node)
 		 MODULE_NAME(node), IDENT(BLOCK_NAME(node)));
 #endif
 
+//printf("do_inst() in %s\n", MODULE_NAME(node));
     INITIALIZED_ATTR(node) = 1;
 
     /* scan all instantiations within this module */
@@ -1010,8 +1024,8 @@ void build_hierarchy()
     top_level = nreverse(top_level);
     /* Do this after all top-levels are resolved so that hierarchical defparams
        can be accurately located */
-    for (t = top_level; t; t = TREE_CHAIN(t))
-	initialize_decls(t);
+    //for (t = top_level; t; t = TREE_CHAIN(t))
+	//initialize_decls(t);*/
 
     BLOCK_DOWN(scope0) = top_level;
     BLOCK_UP(scope0) = NULL;

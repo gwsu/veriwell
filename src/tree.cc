@@ -1034,6 +1034,7 @@ tree build_function(tree ident)
 
     BLOCK_NAME(tmp) = ident;
     BLOCK_UP(tmp) = current_scope;
+    TREE_LABEL(tmp) = 0;  // Non-Zero after pass3_node()
 //  make_decl (ident, current_scope);
     return tmp;
 }
