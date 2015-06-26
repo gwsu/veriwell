@@ -54,7 +54,7 @@ extern tree current_scope;
 
 tree *debug_;
 tree debug_tree;
-tree pass3_again;
+int  pass3_again = 0;
 
 static int in_lval = 0;		/* set if processing lvalue (used in concat) */
 static int in_connect_ports = 0;	/* set if building port connections */
@@ -1497,6 +1497,7 @@ void pass3_node_tail(tree node, tree label)
 
 /* Scan continuous assignments */
 
+if (!pass3_again || TREE_GENERATE(node)) {
 	    for (t = MODULE_ASSIGNMENTS(node); t; t = TREE_CHAIN(t)) {
 		lineno = STMT_SOURCE_LINE(TREE_PURPOSE(t));
 		input_filename = STMT_SOURCE_FILE(TREE_PURPOSE(t));
@@ -1521,6 +1522,7 @@ void pass3_node_tail(tree node, tree label)
 		    pass3_timing_check(t, node);
 		}
 	    }
+}
 
 /* Scan INITIAL and ALWAYS blocks ignoring gates */
 
@@ -1543,6 +1545,7 @@ void pass3_node_tail(tree node, tree label)
 	/* MODULE */
 	else if (code == TASK_BLOCK || code == FUNCTION_BLOCK) {
 //  current_scope = node;
+	    if (pass3_again) break;
 	    set_scope(node);
 
 	    TASK_OUTPUT(node) = TASK_INPUT(node) = NULL;
@@ -1614,6 +1617,8 @@ void pass3_node_tail(tree node, tree label)
 	break;
 
     case ('s'):
+    if (pass3_again && !TREE_GENERATE(node)) break;
+
 	for (; node; node = TREE_CHAIN(node)) {
 	    code = TREE_CODE(node);
 	    prev = node;
@@ -1719,6 +1724,7 @@ void pass3_node_tail(tree node, tree label)
 		break;
 
 	    case (CONT_ASSIGN_IN_GENERATE):
+	    if (!pass3_again) break;
 	    for (t = STMT_BODY(node); t; t = TREE_CHAIN(t)) {
             add_cont_assign_list(TREE_PURPOSE(t));
 		    lineno = STMT_SOURCE_LINE(TREE_PURPOSE(t));
@@ -1728,27 +1734,53 @@ void pass3_node_tail(tree node, tree label)
         break;
 
         case (INSTANCE_IN_GENERATE):
+        if (!pass3_again) break;
+        { tree prep;
         t = STMT_BODY(node);
         if (TREE_CODE(t) == INSTANCE_NODE && !UDP_ATTR(t)) {
         tmp_tree = module_of(current_scope);
         MODULE_INSTANCES (tmp_tree) = chainon (t,
 				MODULE_INSTANCES (tmp_tree));
-//printf("up-module = %s, inst = %s, inst-module = %s\n",
-//  MODULE_NAME(tmp_tree), IDENT(INSTANCE_NAME(t)), IDENT(INSTANCE_MODULE_NAME(t)) );
+//printf("3.1 up-module = %s, inst = %s, inst-module = %s, %x\n",
+//    MODULE_NAME(tmp_tree), IDENT(INSTANCE_NAME(t)), IDENT(INSTANCE_MODULE_NAME(t)), INSTANCE_BLOCK(t) );
+
+        // patch for multi-module in one file
+        // delete a node
+        for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) {
+            //t2 = TREE_CHAIN(t1);
+            //if (!t2) break;
+            if (strcmp(MODULE_NAME(t1), IDENT(INSTANCE_MODULE_NAME(t))) == 0) {
+            top_level = TREE_CHAIN(t1);
+            } else
+            break;
+        }
+        prep = top_level;
+        for (t1 = TREE_CHAIN(top_level); t1; t1 = TREE_CHAIN(t1)) {
+            //t2 = TREE_CHAIN(t1);
+            //if (!t2) break;
+            if (strcmp(MODULE_NAME(t1), IDENT(INSTANCE_MODULE_NAME(t))) == 0) {
+            TREE_CHAIN(prep) = TREE_CHAIN(t1);
+            //break;
+            } else
+            prep = t1;
+        }
+//for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) printf("top2 ... %s\n", MODULE_NAME(t1));
         set_scope(tmp_tree);
         do_instantiation(tmp_tree);
-        current_scope = pop_scope();
 /* Do this after all top-levels are resolved so that hierarchical defparams
    can be accurately located */
-        for (t1 = tmp_tree; t1; t1 = TREE_CHAIN(t1))
+        for (t1 = top_level; t1; t1 = TREE_CHAIN(t1))
         initialize_decls(t1);
 
-        pass3_again = tree_cons (t, NULL_TREE, pass3_again);
+        //pass3_patch = tree_cons (t, NULL_TREE, pass3_patch);
         //pass3_node(INSTANCE_BLOCK(t));
+        current_scope = pop_scope();
+        pass3_again += 1;
         }
         else
             error("generate-instance NOT recognition", NULL_CHAR, NULL_CHAR);
 
+        }
         break;
 
 	    case (IF_STMT):
@@ -1761,12 +1793,14 @@ void pass3_node_tail(tree node, tree label)
 		break;
 
 	    case (GENERATE_IF_STMT):
+	    if (!pass3_again) break;
         if (test(pass3_expr(STMT_COND(node)))) {
             pass3_node_tail(STMT_THEN(node), alt_chain);
         }
 		else if (STMT_ELSE(node)) {
 		    pass3_node_tail(STMT_ELSE(node), alt_chain);
 		}
+        TREE_SET_CODE(node, NULL_STMT);
 		break;
 
 	    case (WHILE_STMT):
@@ -1856,6 +1890,7 @@ void pass3_node_tail(tree node, tree label)
 		break;
 
         case GENERATE_CASE_STMT:
+        if (!pass3_again) break;
         {
             int flag = 0;
             tree tmp1 = STMT_CASE_EXPR(node), tmp2;
@@ -1878,6 +1913,7 @@ void pass3_node_tail(tree node, tree label)
             if (!flag)
                 pass3_node_tail(STMT_CASE_DEFAULT(node), alt_chain);
         }
+        TREE_SET_CODE(node, NULL_STMT);
         break;
 
 	    case DELAY_STMT:
@@ -2085,16 +2121,22 @@ void pass3_tree(tree node)
     finish_scb = BuildSCB(finish_stmt, NOLIST);
     dump = build_stmt(DUMP_STMT, NULL);
     dummy_return = build_stmt(DUMMY_RETURN_STMT, NULL);
-    pass3_again = NULL_TREE;
-
-    for (t = node; t; t = TREE_CHAIN(t))
-	pass3_node(t);
 
     // patch for IN_GENERATE_INSTANCE
-    for (t = pass3_again; t; t = TREE_CHAIN(t))
-    pass3_node(INSTANCE_BLOCK(TREE_PURPOSE(t)));
+    do {
+        pass3_again = 1;
+        for (t = node; t; t = TREE_CHAIN(t)) {//printf("top 3.8... %s\n", MODULE_NAME(t));
+        pass3_node(t);
+        }
+    } while (pass3_again > 1);
 
-    for (t = node; t; t = TREE_CHAIN(t))
+    pass3_again = 0;
+//for (t = top_level; t; t = TREE_CHAIN(t)) printf("top 32... %s\n", MODULE_NAME(t));
+    for (t = top_level; t; t = TREE_CHAIN(t)) {
+	pass3_node(t);
+    }
+
+    for (t = top_level; t; t = TREE_CHAIN(t))
 	connect_instances(t);
 
 }

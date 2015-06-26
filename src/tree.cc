@@ -1050,6 +1050,7 @@ tree build_stmt(enum tree_code code, ...)
 
 //  code = va_arg (p, enum tree_code);
     t = make_node(code);
+    TREE_GENERATE(t) = in_generate;
     if (*tree_code_type[(int) code] == 's')
 	STMT_SOURCE_LINE(t) = va_arg(p, lineno_t);
     length = tree_code_length[(int) code];

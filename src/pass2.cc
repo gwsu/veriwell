@@ -528,12 +528,13 @@ static tree module_lookup(tree instance)
 		return (TREE_PURPOSE(t));
 	    }
 
-
-	    if (LIB_MODULE_ATTR(TREE_PURPOSE(t))) {
-		if (list_length(INSTANCE_PORTS(instance)) !=
-		    list_length(BLOCK_PORTS(TREE_PURPOSE(t))))
-		    continue;
-	    }
+//printf("lookup 2 %s : %d  %d\n", name, list_length(INSTANCE_PORTS(instance)),
+//  list_length(BLOCK_PORTS(TREE_PURPOSE(t))) );
+	    //if (LIB_MODULE_ATTR(TREE_PURPOSE(t))) {
+		//if (list_length(INSTANCE_PORTS(instance)) !=
+		//    list_length(BLOCK_PORTS(TREE_PURPOSE(t))))
+		//    continue;
+	    //}
 	    return (TREE_PURPOSE(t));
 	}
     }
@@ -801,7 +802,7 @@ void do_instantiation(tree node)
 {
     tree t, instance;
     int had_to_copy;
-
+    extern int pass3_again;
 /* Allocate space for declared vars */
 
 #if VDEBUG != 0
@@ -845,7 +846,7 @@ void do_instantiation(tree node)
 
 	/* Next, if the module is not top-level, the we need to make a copy */
 	if (BLOCK_UP(instance)) {
-//printf_V ("Starting Copy....");
+//printf_V ("Starting Copy... %x\n", instance);
 	    instance = copy_module(instance);
 //printf_V ("Ending Copy\n");
 	    had_to_copy = 1;
@@ -873,7 +874,10 @@ void do_instantiation(tree node)
 // "    {
 // "      INSTANCE_NAME (t) = INSTANCE_MODULE_NAME (t);
 //"    }
+//for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) printf("top2.0 ... %s\n", MODULE_NAME(t1));
 
+//printf("2.1 up-module = %s, inst = %s, inst-module = %s, %x\n",
+//    MODULE_NAME(node), IDENT(INSTANCE_NAME(t)), MODULE_NAME(instance), instance);
 	/* Thread the module in */
 	TREE_CHAIN(instance) = BLOCK_DOWN(node);
 	BLOCK_DOWN(node) = instance;
@@ -960,6 +964,8 @@ void do_instantiation(tree node)
 	    do_instantiation(instance);
 	    current_scope = pop_scope();
 	}
+
+    if (pass3_again) break;
     }
 }
 
@@ -977,6 +983,11 @@ void build_hierarchy()
 
     for (t1 = module_list; t1; t1 = TREE_CHAIN(t1)) {
 	t = TREE_PURPOSE(t1);
+
+//printf("top 2.0 ... %s\n", MODULE_NAME(t));
+//if (strcmp(MODULE_NAME(t), "sub_1") == 0)
+//continue;
+
 	if (!BLOCK_UP(t) && !UDP_ATTR(t)) {	/* don't do anything if not top_level or udp */
 	    set_scope(t);
 	    do_instantiation(t);
@@ -996,6 +1007,7 @@ void build_hierarchy()
 //      initialize_decls (t);
 	}
     }
+    top_level = nreverse(top_level);
     /* Do this after all top-levels are resolved so that hierarchical defparams
        can be accurately located */
     for (t = top_level; t; t = TREE_CHAIN(t))

@@ -1075,7 +1075,7 @@ list_of_param_assignments
 	;
 
 param_assignment
-	: IDENTIFIER '=' constant_expression
+	: IDENTIFIER '=' expression
 		{ $$ = make_param_decl (check_non_reg ($1), current_spec, $3);
 		}
 	| IDENTIFIER '=' mintypmax_expression_triplet

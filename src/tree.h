@@ -184,6 +184,7 @@ struct tree_common {
     unsigned int label:8;
     unsigned int sub_label:8;
 
+    unsigned generate:1;
     unsigned constant:1;
     unsigned integer:1;
 //  unsigned signed_attr : 1;
@@ -222,6 +223,11 @@ struct tree_common {
 
 /* Define accessors for the fields that all tree nodes have
    (though some fields are not used for all kinds of nodes).  */
+
+
+/* The tree-generate = 1 says
+   the statement nodes are in the generate-block. */
+#define TREE_GENERATE(NODE) ((NODE)->common.generate)
 
 /* The tree-code says what kind of node it is.
    Codes are defined in tree.def.  */
