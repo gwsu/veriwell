@@ -1622,13 +1622,14 @@ Group *eval(tree * pc)
 	    g1 = *--R;
 
 
-	    if (!R_ngroups) {
 		if (is_real) {
 		    REAL_(g1) *= REAL_(g2);
 		    R++;
 		    break;
 		}
 
+	    if (!R_ngroups) {
+//printf("debug op-mult : %x * %x\n", AVAL(g1), AVAL(g2));
 		if (BVAL(g1) || BVAL(g2)) {
 		    AVAL(g1) = (Bit) - 1;
 		    BVAL(g1) = (Bit) - 1;
