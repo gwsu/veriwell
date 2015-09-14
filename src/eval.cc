@@ -557,6 +557,7 @@ Group *eval(tree * pc)
 		Bit aval = AVAL(g1) & R_mask;
 		ngroups_t offset;
 
+		VECTOR_DIRECTION_ATTR(decl) = (array_hi >= array_lo);
 		if (VECTOR_DIRECTION_ATTR(decl)) {
 		    if (aval < array_lo || aval > array_hi) {
 			cond = X;
@@ -608,15 +609,13 @@ Group *eval(tree * pc)
 	    }
 	    break;
 
+	case ARRAY_BIT_REF:
 	case BIT_REF:
 	    /* evaluate the index */
 	    eval_and_retain_flags(BIT_EXPR_CODE(t));
-        if (TREE_CODE(BIT_REF_DECL(t)) == ARRAY_REF) {
-        DECL_STORAGE(BIT_REF_DECL(t)) = (Group *)BIT_REF_4(t);
-        }
-	    g2 = DECL_STORAGE(BIT_REF_DECL(t));
 	    cond = ZERO;
 	    g1 = *--R;
+//printf("debug ... %x  %x\n", AVAL(g1), AVAL(g2));
 	    if (BVAL(g1)) {
 		cond = X;
 		goto condition_done;
@@ -628,10 +627,12 @@ Group *eval(tree * pc)
         }
 		nbits_t decl_lsb = LSB(decl);
 		nbits_t decl_msb = MSB(decl);
+
+		VECTOR_DIRECTION_ATTR(decl) = (MSB(decl) >= LSB(decl));
 		Bit aval = AVAL(g1);
 		nbits_t bit_offset;
 		ngroups_t group_offset;
-
+//printf("debug ... %x  %x\n", decl_msb, decl_lsb);
 		if (VECTOR_DIRECTION_ATTR(decl)) {
 		    if (aval < decl_lsb || aval > decl_msb) {
 			cond = X;
@@ -649,6 +650,13 @@ Group *eval(tree * pc)
 			group_offset = bits_to_groups(decl_lsb - aval + 1);
 		    }
 		}
+
+		if (TREE_CODE(BIT_REF_DECL(t)) == ARRAY_REF) {
+		eval_1(BIT_REF_DECL(t));
+		DECL_STORAGE(BIT_REF_DECL(t)) = *--R;
+		}
+		g2 = DECL_STORAGE(BIT_REF_DECL(t));
+
 		cond = ((AVAL(g2 + group_offset) &
 			 ((Bit) 1 << bit_offset)) != 0) ? ONE : ZERO;
 		if (BVAL(g2 + group_offset) & ((Bit) 1 << bit_offset)) {

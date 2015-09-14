@@ -2189,10 +2189,9 @@ lval_normal
                 error ("Illegal non-constant expression", NULL_CHAR, NULL_CHAR);
                 $$ = error_mark_node;
               } else {
-                $$ = build_bit_ref (
-                    check_lval_nocheck ($1, lval_type, current_spec), $3);
+                $$ = build_bit_ref (check_lval_nocheck ($1, lval_type, current_spec), $3);
                 REFERENCED_ATTR($$) = 1;
-                $$ = build_part_ref ($$, tmp_tree, $5);
+                $$ = build_part_select_ref ($$, tmp_tree, $5, MULT_EXPR);
               }
               tmp_tree = NULL_TREE;
           }
@@ -2868,14 +2867,14 @@ primary_ident
             } else
 		      $$ = build_part_ref (check_rval_nocheck ($1), $3, $5);
           }
-          else {
+          else { // array reference
             if (!TREE_CONSTANT_ATTR (tmp_tree)) {
               error ("Illegal non-constant expression", NULL_CHAR, NULL_CHAR);
               $$ = error_mark_node;
             } else {
 		      $$ = build_bit_ref (check_rval_nocheck ($1), $3);
               REFERENCED_ATTR($$) = 1;
-		      $$ = build_part_ref ($$, tmp_tree, $5);
+              $$ = build_part_select_ref ($$, tmp_tree, $5, MULT_EXPR);
             }
             tmp_tree = NULL_TREE;
           }

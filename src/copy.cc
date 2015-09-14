@@ -435,6 +435,7 @@ tree copy_tree_with_stuff(tree node, tree stuff)
 	new_node = copy_node(node);
 	lval_save = in_lval;
 	switch (TREE_CODE(new_node)) {
+	case ARRAY_BIT_REF:
 	case BIT_REF:
 	    in_lval = 0;
 	    BIT_EXPR(new_node) = copy_tree(BIT_EXPR(node));
@@ -461,6 +462,14 @@ tree copy_tree_with_stuff(tree node, tree stuff)
 	    PART_NAME(new_node) = copy_tree(PART_NAME(node));
 	    in_lval = lval_save;
 	    PART_DECL(new_node) = copy_tree(PART_DECL(node));
+	    break;
+	case PART_SELECT_REF:
+	    in_lval = 0;
+	    CONCAT_STARTING(new_node) = copy_tree(CONCAT_STARTING(node));
+	    CONCAT_EXPR(new_node) = copy_tree(CONCAT_EXPR(node));
+	    CONCAT_MODE(new_node) = (CONCAT_MODE(node));
+	    in_lval = lval_save;
+	    CONCAT_DECL(new_node) = copy_tree(CONCAT_DECL(node));
 	    break;
 	case SYSFUNCTION_REF:
 	case FUNCTION_REF:

@@ -141,6 +141,9 @@ void BuildMarker(tree decl, struct Marker_info *marker_info)
 {
     Marker *marker;
 
+    if (TREE_CODE(decl)==ARRAY_REF) {
+    decl = ARRAY_REF_DECL(decl);
+    }
     /* First, ensure that only one marker per variable is used e.g. a = b + b; */
     for (marker = marker_info->first; marker; marker = marker->link)
 	if (marker->decl == decl)
@@ -381,6 +384,9 @@ void thread_marker(Marker * marker)
     Marker *mark, *tmp;
     tree decl = marker->decl;
 
+    if (TREE_CODE(decl)==ARRAY_REF) {
+    decl = ARRAY_REF_DECL(decl);
+    }
     if (!DECL_EVENT_CHAIN(decl)) {
 	ADD_LIST(DECL_EVENT_CHAIN(decl), marker);
     }

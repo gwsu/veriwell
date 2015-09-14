@@ -469,6 +469,13 @@ static nbits_t fixup_reference(tree node)
     extern int pass2_init_decl_flag;
 
     switch (code) {
+    case ARRAY_BIT_REF:
+    t = BIT_REF_DECL(node);
+    TREE_NBITS(t) = fixup_reference(t);
+    //TREE_SET_CODE(node, BIT_REF);
+    //TREE_NBITS(node) = fixup_reference(node);
+    //break;
+
     case BIT_REF:
 	BIT_EXPR_CODE(node) = pass3_expr_intrude(BIT_EXPR(node), 1);
 	TREE_LABEL(node) = TREE_LABEL(BIT_EXPR(node));
@@ -491,9 +498,9 @@ static nbits_t fixup_reference(tree node)
 		TREE_SET_CODE(node, ARRAY_REF);
 	}
 	maybe_build_marker(BIT_REF_DECL(node));
-	if (TREE_CODE(node) == ARRAY_REF)
-	    TREE_NBITS(node) = TREE_NBITS(BIT_REF_DECL(node));
-	else
+	//if (TREE_CODE(BIT_REF_DECL(node)) == ARRAY_REF)
+	//    TREE_NBITS(node) = TREE_NBITS(BIT_REF_DECL(node));
+	//else
 	    TREE_NBITS(node) = 1;
 	break;
 
@@ -517,15 +524,28 @@ static nbits_t fixup_reference(tree node)
 	}
 
     {
+        nbits_t  n;
         nbits_t  i = get_range(CONCAT_EXPR(node),
 		    IDENTIFIER_POINTER(DECL_NAME(CONCAT_DECL(node))));
         tree j = CONCAT_STARTING(node);
+
+        if (CONCAT_MODE(node) == MULT_EXPR) { // array reference part
+            n = get_range(j, IDENTIFIER_POINTER(DECL_NAME(CONCAT_DECL(node))));
+            if (n > i) {
+                i = 1 + n - i;
+                CONCAT_MODE(node) = MINUS_EXPR;
+            }
+            else {
+                i = 1 + i - n;
+                CONCAT_MODE(node) = PLUS_EXPR;
+            }
+        }
 
         tree tmp_tree = build_bit_ref (CONCAT_DECL(node), j);
         tree tmp2 = build_tree_list (tmp_tree, NULL_TREE);
 /*
 printf("debug : j=%d, i=%d\n",
-	    get_range(j, IDENTIFIER_POINTER(DECL_NAME(CONCAT_DECL(node)))), i );*/
+  get_range(j, IDENTIFIER_POINTER(DECL_NAME(CONCAT_DECL(node)))), i );*/
 
 		for ( ; i > 1; i-- )
         {
@@ -612,13 +632,6 @@ printf("debug : j=%d, i=%d\n",
 	    TREE_NBITS(node) = nbits * CONCAT_COUNT(node);
 	break;
 
-    case ARRAY_BIT_REF:
-    t = BIT_REF_DECL(node);
-    TREE_NBITS(t) = fixup_reference(t);
-    TREE_SET_CODE(node, BIT_REF);
-    TREE_NBITS(node) = fixup_reference(node);
-    BIT_REF_4(node) = (tree)eval_1(t);
-    break;
 
     case PART_REF:
 	if (HIERARCHICAL_ATTR(node)) {
@@ -628,13 +641,13 @@ printf("debug : j=%d, i=%d\n",
 		break;
 	    }
 	}
-
+/*
     t = PART_DECL(node);
     if (TREE_CODE(t)==ARRAY_REF) {
         fixup_reference(t);
         PART_DECL(node) = ARRAY_REF_DECL(t);
         val = eval_1(t);
-    } else
+    } else */
         val = DECL_STORAGE(PART_DECL(node));
 
 /* If the decl that node is pointing to is a redeclared port, move the pointer
