@@ -433,6 +433,7 @@ tree copy_node(tree node)
 
     TREE_CHAIN(t) = 0;
 
+    INITIALIZED_ATTR(t) = 0;	/* Allow pass2 to scan this */
     return t;
 }
 

@@ -161,6 +161,10 @@ void pass3_decl(tree decl)
     ngroups_t ngroups;
     ngroups_t array_size;
 
+    if (INITIALIZED_ATTR(decl))
+        if (code != TMP_DECL && code != PARAM_DECL
+        ) return;
+
     lineno = DECL_SOURCE_LINE(decl);
     input_filename = DECL_SOURCE_FILE(decl);
     INITIALIZED_ATTR(decl) = 1;
@@ -1014,6 +1018,7 @@ void build_hierarchy()
 //printf_V ("Allocating variable storage\n");
     for (t1 = module_list; t1; t1 = TREE_CHAIN(t1)) {
 	t = TREE_PURPOSE(t1);
+
 	if (!BLOCK_UP(t) && !UDP_ATTR(t)) {	/* don't do anything if not top_level or udp */
 	    TREE_CHAIN(t) = top_level;
 	    top_level = t;
