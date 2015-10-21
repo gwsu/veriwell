@@ -1512,7 +1512,6 @@ void pass3_node_tail(tree node, tree label)
 
 /* Scan continuous assignments */
 
-if (!pass3_again || TREE_GENERATE(node)) {
 	    for (t = MODULE_ASSIGNMENTS(node); t; t = TREE_CHAIN(t)) {
 		lineno = STMT_SOURCE_LINE(TREE_PURPOSE(t));
 		input_filename = STMT_SOURCE_FILE(TREE_PURPOSE(t));
@@ -1537,7 +1536,6 @@ if (!pass3_again || TREE_GENERATE(node)) {
 		    pass3_timing_check(t, node);
 		}
 	    }
-}
 
 /* Scan INITIAL and ALWAYS blocks ignoring gates */
 
@@ -1560,7 +1558,7 @@ if (!pass3_again || TREE_GENERATE(node)) {
 	/* MODULE */
 	else if (code == TASK_BLOCK || code == FUNCTION_BLOCK) {
 //  current_scope = node;
-	    if (pass3_again) break;
+	    //if (pass3_again) break;
 	    set_scope(node);
 
 	    TASK_OUTPUT(node) = TASK_INPUT(node) = NULL;
@@ -1655,11 +1653,35 @@ if (!pass3_again || TREE_GENERATE(node)) {
 
 	    switch (code) {
 	    case (ALWAYS_BLOCK):
+		if ( TREE_GENERATE(node) ) {
+		TREE_GENERATE(node) = 0;
+		tmp_tree = module_of(current_scope);
+
+		//set_scope(tmp_tree);
+		BLOCK_BODY (tmp_tree) = tree_cons (node,
+			(tree)ALWAYS_CODE, BLOCK_BODY (tmp_tree));
+		//current_scope = pop_scope();
+
+		break;
+		}
+		TREE_CHAIN(node) = NULL_TREE;
 		marker_info.current_scb = BuildSCB(node, READY_LIST);
 		pass3_node_tail(STMT_BODY(node), node);
 		break;
 
 	    case (INITIAL_BLOCK):
+		if ( TREE_GENERATE(node) ) {
+		TREE_GENERATE(node) = 0;
+		tmp_tree = module_of(current_scope);
+
+		//set_scope(tmp_tree);
+		BLOCK_BODY (tmp_tree) = tree_cons (node,
+			(tree)INITIAL_CODE, BLOCK_BODY (tmp_tree));
+		//current_scope = pop_scope();
+
+		break;
+		}
+		TREE_CHAIN(node) = NULL_TREE;
 		marker_info.current_scb = BuildSCB(node, READY_LIST);
 		pass3_node_tail(STMT_BODY(node), dump);
 		break;
@@ -1745,13 +1767,17 @@ if (!pass3_again || TREE_GENERATE(node)) {
 		break;
 
 	    case (CONT_ASSIGN_IN_GENERATE):
-	    if (!pass3_again) break;
-	    for (t = STMT_BODY(node); t; t = TREE_CHAIN(t)) {
-            add_cont_assign_list(TREE_PURPOSE(t));
-		    lineno = STMT_SOURCE_LINE(TREE_PURPOSE(t));
-		    input_filename = STMT_SOURCE_FILE(TREE_PURPOSE(t));
-		    pass3_assignment(TREE_PURPOSE(t));
-	    }
+
+	    TREE_GENERATE(node) = 0;
+	    tmp_tree = module_of(current_scope);
+
+	    for (t = STMT_BODY(node); t; t = TREE_CHAIN(t))
+	        add_cont_assign_list(TREE_PURPOSE(t));
+	    //set_scope(tmp_tree);
+	    MODULE_ASSIGNMENTS (tmp_tree) =
+	        chainon (STMT_BODY(node), MODULE_ASSIGNMENTS (tmp_tree));
+	    //current_scope = pop_scope();
+
         break;
 
         case (INSTANCE_IN_GENERATE):
@@ -1786,9 +1812,9 @@ if (!pass3_again || TREE_GENERATE(node)) {
             prep = t1;
         }
 //for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) printf("top3 ... %s\n", MODULE_NAME(t1));
-        set_scope(tmp_tree);
+        //set_scope(tmp_tree);
         do_instantiation(tmp_tree);
-        current_scope = pop_scope();
+        //current_scope = pop_scope();
         pass3_again++;
 
         //pass3_patch = tree_cons (t, NULL_TREE, pass3_patch);
@@ -2141,41 +2167,41 @@ void pass3_tree(tree node)
     dummy_return = build_stmt(DUMMY_RETURN_STMT, NULL);
 
     // patch for IN_GENERATE_INSTANCE
+    for (t = top_level; t; t = TREE_CHAIN(t)) {
+//printf("P3 top ... %s\n", MODULE_NAME(t));
     do {
         pass3_again = 0;
+//printf("P3 = 0\n");
 
         // do PARAMETER exclude FUNCTION_REF
         pass2_init_decl_again = 0;
 //printf("debug init_decl = %d\n", pass2_init_decl_again);
-        for (t = top_level; t; t = TREE_CHAIN(t))
         initialize_decls(t);
 
         // do FUNCTION_BLOCK
         pass2_init_decl_again = 1;
-        for (t = top_level; t; t = TREE_CHAIN(t))
         initialize_decls(t);
 
         // do init_decl ALL
         pass2_init_decl_again = 2;
-        for (t = top_level; t; t = TREE_CHAIN(t))
         initialize_decls(t);
 
         // do IN_GENERATE only
         pass3_again = 1;
-        for (t = node; t; t = TREE_CHAIN(t)) {
+//printf("P3 = 1\n");
         pass3_node(t);
-        }
     } while (pass3_again > 1);
 
     // do others except IN_GENERATE
     pass3_again = 0;
-//for (t = top_level; t; t = TREE_CHAIN(t)) printf("top 32... %s\n", MODULE_NAME(t));
-    for (t = top_level; t; t = TREE_CHAIN(t)) {
+//printf("P3 = 2\n");
 	pass3_node(t);
     }
+//printf("P3 = 3\n");
 
     for (t = top_level; t; t = TREE_CHAIN(t))
 	connect_instances(t);
+//printf("P3 = 4\n");
 
 }
 
