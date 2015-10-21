@@ -285,8 +285,9 @@ void init_parse()
 %type	<ttype>	description_list
 %type	<ttype>	description
 %type	<ttype>	module
-/* %type	<ttype>	module_item_list */
-/* %type	<ttype>	module_item */
+%type	<ttype>	module_item_list
+%type	<ttype>	module_item
+%type	<ttype>	module_item_list_blk module_item_blk
 %type	<ttype>	list_of_ports
 %type	<ttype>	list_of_port_declarations
 %type	<ttype>	list_of_port_array port_direction port_attribute
@@ -344,7 +345,7 @@ void init_parse()
 %type	<stype>	strength0 strength1
 %type	<ttype>	xrange
 %type	<ttype>	range
-/* %type	<ttype>	gate_declaration */
+%type	<ttype>	gate_declaration
 /* %type	<ttype>	gate_description */
 %type	<gtype>	gatetype
 %type	<ttype>	gate_instance_clist
@@ -520,7 +521,7 @@ module
           if ( port_decl_t )
               make_port_decl (port_decl_t);
         }
-	  module_item_list ENDMODULE
+	  module_item_list_blk ENDMODULE
 		{
 		  current_scope = pop_scope (); 
 		  BLOCK_BODY (current_module) = nreverse (BLOCK_BODY (current_module));
@@ -532,8 +533,45 @@ module
 /*	| MACROMODULE IDENTIFIER list_of_ports sc module_item_list ENDMODULE */
 	;
 
+module_item_list_blk
+	: /* empty */
+        { $$ = NULL; }
+    | module_item_list_blk module_item
+    | module_item_list_blk module_item_blk
+    ;
+
+module_item_blk
+	: BEGIN
+		{ $<ttype>$ = build_stmt (BEGIN_STMT, stmt_lineno); }
+	  module_item_list END
+		{ STMT_BODY ($<ttype>2) = nreverse
+			  (chainon (build_stmt (END_STMT, stmt_lineno), $3));
+		  $$ = $<ttype>2;
+		}
+	| BEGIN ':' IDENTIFIER
+		{ tmp_tree = make_node (NAMED_BLOCK);
+		  BLOCK_DOWN (current_scope) = chainon (tmp_tree, BLOCK_DOWN (current_scope));
+		  BLOCK_UP (tmp_tree) = current_scope;
+		  BLOCK_NAME (tmp_tree) = $3;
+		  BLOCK_BODY (tmp_tree) = NULL_TREE;
+		  BLOCK_CONTEXT_LIST (tmp_tree) = NULL;
+		  make_block_decl (check_block ($3), current_scope, tmp_tree);
+		  current_scope = tmp_tree;
+		  push_scope ();
+		  $<ttype>$ = build_stmt (BEGIN_NAMED_STMT, stmt_lineno, NULL_TREE, tmp_tree);
+		}
+	  module_item_list END
+		{ tmp_tree = build_stmt (END_NAMED_STMT, stmt_lineno,
+			  NULL_TREE, STMT_BLOCK ($<ttype>4));
+		  STMT_BODY ($<ttype>4) = nreverse (chainon (tmp_tree, $5));
+		  current_scope = pop_scope ();
+		  $$ = $<ttype>4;
+		}
+    ;
+
 module_item_list
 	: /* empty */
+        { $$ = NULL; }
 	| module_item_list module_item
 		{ yyerrok; }
 	| module_item_list error

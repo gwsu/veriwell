@@ -754,6 +754,8 @@ tree check_net(tree node)
 {
     tree t = IDENT_CURRENT_DECL(node);
 
+    if (t && (DECL_CONTEXT(t) != current_scope)) return node;
+
     if (t && !PORT_INPUT_ATTR(t) && !PORT_OUTPUT_ATTR(t)) {
 	error("The name '%s' has already been declared",
 	      IDENT(node), NULL_CHAR);
