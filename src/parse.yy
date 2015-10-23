@@ -103,6 +103,7 @@ int in_tf = 0;
 int in_systask = 0;
 int in_generate = 0;
 int in_generate_block = 0;
+int is_reg = 0;
 
 /* If inside continuous assignment, handle lval differently */
 enum lval_type lval_type = LVAL_REG;
@@ -116,7 +117,7 @@ int in_sensitive_wildcard = 0;
 tree sensitive_list_t;
 
 
-struct port_array_node  *port_decl_t;
+struct port_node *port_decl_t;
 struct reg_node *reg_init_t;
 
 void init_parse()
@@ -138,6 +139,7 @@ void init_parse()
 	current_delay = NULL_TREE;
 	interactive_statement = NULL_TREE;
 	tmp_tree = NULL_TREE;
+    is_reg = 0;
     port_decl_t = NULL;
     reg_init_t = NULL;
 }
@@ -290,7 +292,6 @@ void init_parse()
 %type	<ttype>	module_item_list_blk module_item_blk
 %type	<ttype>	list_of_ports
 %type	<ttype>	list_of_port_declarations
-%type	<ttype>	list_of_port_array port_direction port_attribute
 %type	<ttype> list_of_port_identifier list_of_port_ident list_of_delimit
 %type	<ttype>	port_clist
 %type	<ttype>	port
@@ -517,9 +518,6 @@ module
       list_of_param_declaration_2001
 	  list_of_ports sc
 		{ MODULE_PORT_LIST (current_module) = nreverse ($6);
-          
-          if ( port_decl_t )
-              make_port_decl (port_decl_t);
         }
 	  module_item_list_blk ENDMODULE
 		{
@@ -589,70 +587,20 @@ list_of_ports
 
 /* verilog-2001 */
 list_of_port_declarations
-	: list_of_port_array
-	| list_of_port_declarations list_of_port_array
-		{ $$ = chainon ($2, $1); }
+	: port_spec list_of_port_identifier
+		{ $$ = $2;
+		  MODULE_PORT_LIST (current_module) = $$;
+		  make_port_decl (port_decl_t, current_spec);
+		  port_decl_t = NULL;
+		}
+	| list_of_port_declarations port_spec list_of_port_identifier
+		{ $$ = chainon ($3, $1);
+		  MODULE_PORT_LIST (current_module) = $$;
+		  make_port_decl (port_decl_t, current_spec);
+		  port_decl_t = NULL;
+		}
 	| list_of_port_declarations ',' error
 	;
-
-list_of_port_array
-	: port_attribute list_of_port_identifier
-        { $$ = $2;
-        }
-	;
-
-
-port_direction
-    : INPUT
-        { port_decl_t = add_port_array (port_decl_t);
-          port_decl_t->in_or_out = 0;
-        }
-    | OUTPUT
-        { port_decl_t = add_port_array (port_decl_t);
-          port_decl_t->in_or_out = 1;
-        }
-    | INOUT
-        { port_decl_t = add_port_array (port_decl_t);
-          port_decl_t->in_or_out = 2;
-        }
-    ;
-
-
-port_attribute
-	: port_direction xrange
-        { port_decl_t->wire_or_reg = 0;
-          port_decl_t->port = NULL;
-
-          port_decl_t->is_bus = 1;
-		  if ( $2 == NULL_TREE )
-			port_decl_t->is_bus = 0;
-		  else
-			port_decl_t->range = *$2;
-        }
-	| port_direction NETTYPE xrange
-        { port_decl_t->wire_or_reg = 0;
-          port_decl_t->port = NULL;
-
-          port_decl_t->is_bus = 1;
-		  if ( $3 == NULL_TREE )
-			port_decl_t->is_bus = 0;
-		  else
-			port_decl_t->range = *$3;
-        }
-    | OUTPUT REG xrange
-        { port_decl_t = add_port_array (port_decl_t);
-          port_decl_t->in_or_out = 1;
-          port_decl_t->wire_or_reg = 1;
-          port_decl_t->port = NULL;
-
-          port_decl_t->is_bus = 1;
-		  if ( $3 == NULL_TREE )
-			port_decl_t->is_bus = 0;
-		  else
-			port_decl_t->range = *$3;
-        }
-    ;
-
 
 list_of_port_identifier
     : list_of_port_ident
@@ -664,15 +612,12 @@ list_of_port_identifier
 
 list_of_port_ident
 	: IDENTIFIER list_of_delimit
-	    { set_decl ($1, $1);  /* point to itself to mark as port */ 
-          $$ = build_tree_list ($1, NULL_TREE);
+		{ set_decl ($1, $1);  /* point to itself to mark as port */
+		  $$ = build_tree_list ($1, NULL_TREE);
 
-          if ( port_decl_t )
-          {
-              port_decl_t->port = add_port (port_decl_t->port);
-              port_decl_t->port->id = $1;
-          }
-        }
+		  port_decl_t = add_port (port_decl_t);
+		  port_decl_t->id = $1;
+		}
 	| error
 	;
 
@@ -1153,7 +1098,11 @@ port_spec
 		  //  $$ = current_spec = make_reg_spec ($2);
 		  //else
 		  //  $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
-		  PORT_INPUT_ATTR ($2) = 1;
+		  $$ = $2;
+		  PORT_INPUT_ATTR ($$) = 1;
+		  if (is_reg)
+		    warning ("INPUT port is declared by 'REG' !\n",
+		        NULL_CHAR, NULL_CHAR);
 		}
 	| OUTPUT port_spec_t //xrange
 		{ function_error;
@@ -1161,7 +1110,9 @@ port_spec
 		  //  $$ = current_spec = make_reg_spec ($2);
 		  //else
 		  //  $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
-		  PORT_OUTPUT_ATTR ($2) = 1;
+		  $$ = $2;
+		  PORT_OUTPUT_ATTR ($$) = 1;
+		  is_reg = 0;
 		}
 	| INOUT port_spec_t //xrange
 		{ function_error;
@@ -1169,8 +1120,12 @@ port_spec
 		  //  $$ = current_spec = make_reg_spec ($2);
 		  //else
 		  //  $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
-		  PORT_INPUT_ATTR ($2) = 1;
-		  PORT_OUTPUT_ATTR ($2) = 1;
+		  $$ = $2;
+		  PORT_INPUT_ATTR ($$) = 1;
+		  PORT_OUTPUT_ATTR ($$) = 1;
+		  if (is_reg)
+		    warning ("INOUT port is declared by 'REG' !\n",
+		        NULL_CHAR, NULL_CHAR);
 		}
 	;
 
@@ -1196,9 +1151,11 @@ port_spec_t
 		      $$ = current_spec = make_reg_spec ($1);
 		}
 	| reg_spec
+		{ if (!in_tf) is_reg = 1;
+		}
 	| real_spec
 	| net_spec
-    ;
+	;
 
 reg_spec
 	: REG xrange

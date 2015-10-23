@@ -412,114 +412,49 @@ void init_decl()
 
 struct port_node *add_port (struct port_node *head)
 {
-	struct port_node *p;
+    struct port_node *p;
 
-	p = (struct port_node *) malloc ( sizeof (struct port_node) );
-	if ( p )
+    p = (struct port_node *) malloc ( sizeof (struct port_node) );
+    if ( p )
     {
-		//printf("Memory allocated at: %x\n",p);
+        //printf("Memory allocated at: %x\n",p);
         p->next = head;
         p->id = NULL_TREE;
     }
-	else
-		printf("Not Enough Memory in add_port()\n");
+    else
+        printf("Not Enough Memory in add_port()\n");
 
     return p;
 }
 
-struct port_array_node *add_port_array (struct port_array_node *head)
-{
-	struct port_array_node *p;
-
-	p = (struct port_array_node *) malloc ( sizeof (struct port_array_node) );
-	if ( p )
-    {
-		//printf("Memory allocated at: %x\n",p);
-        p->next = head;
-        p->in_or_out = 0;
-        p->wire_or_reg = 0;
-        //p->range = NULL_TREE;
-        p->port = NULL;
-    }
-	else
-		printf("Not Enough Memory in add_array_node()\n");
-
-    return p;
-}
-
-
-int make_port_decl (struct port_array_node *head)
+int make_port_decl (struct port_node *head, tree current_spec)
 {
     int n = 0 ;
 
-    struct port_array_node *array, *arr_next;
-	struct port_node *p;
-    array = head;
-    p = array->port;
+    struct port_node *p;
 
-    if ( head == NULL || p == NULL )
+    if ( head == NULL )
     {
-		printf("Head is NULL in make_port_decl()\n");
+        printf("Head is NULL in make_port_decl()\n");
         return -1;
     }
 
     tree decl_t;
     tree curr_spec_t;
 
-     while ( array )
-     {
-        if ( array->wire_or_reg == 1 )
-            curr_spec_t = ( array->is_bus == 0 ) ? 
-                          make_reg_spec ( NULL_TREE ) :
-                          make_reg_spec ( &(array->range) );
-        else
-            curr_spec_t = ( array->is_bus == 0 ) ?
-                          make_net_spec (default_net_type, NULL_TREE, NULL_TREE) :
-                          make_net_spec (default_net_type, &(array->range), NULL_TREE);
-
-        if ( array->in_or_out == 0 )
-            PORT_INPUT_ATTR (curr_spec_t) = 1;
-        else if ( array->in_or_out == 1 )
-            PORT_OUTPUT_ATTR (curr_spec_t) = 1;
-        else
-        {
-            PORT_INPUT_ATTR (curr_spec_t) = 1;
-            PORT_OUTPUT_ATTR (curr_spec_t) = 1;
-        }
-
-        //---------------------------------------------
-        // begin in each array
-
-        p = array->port;
-        array->port = p->next;
-		decl_t = make_decl (check_port (p->id), curr_spec_t, NULL_TREE, NULL_TREE);
+    while ( head )
+    {
+        p = head;
+        head = p->next;
+        decl_t = make_decl (check_port (p->id), current_spec, NULL_TREE, NULL_TREE);
         //printf("Memory free at %x\n", p);
         free (p);
         n++;
+        BLOCK_PORTS (current_scope) =
+            chainon (decl_t, BLOCK_PORTS (current_scope));
+    }
 
-        while ( array->port )
-        {
-            p = array->port;
-            array->port = p->next;
-            decl_t = chainon (make_decl (check_port (p->id), curr_spec_t, NULL_TREE, NULL_TREE), decl_t);
-            //printf("Memory free at %x\n", p);
-            free (p);
-            n++;
-        }
-
-		BLOCK_PORTS (current_scope) =
-		    chainon (decl_t, BLOCK_PORTS (current_scope));
-
-        // end in each array
-        //---------------------------------------------
-
-        arr_next = array->next;
-        //printf("Memory free at %x\n", array);
-        free (array);
-        array = arr_next;
-	}
-
-	return n;
+    return n;
 }
 
 
@@ -532,17 +467,17 @@ int make_port_decl (struct port_array_node *head)
  */
 struct reg_node *add_reg (struct reg_node *head)
 {
-	struct reg_node *p;
+    struct reg_node *p;
 
-	p = (struct reg_node *) malloc ( sizeof (struct reg_node) );
-	if ( p )
+    p = (struct reg_node *) malloc ( sizeof (struct reg_node) );
+    if ( p )
     {
-		//printf("Memory allocated at: %x\n",p);
+        //printf("Memory allocated at: %x\n",p);
         p->next = head;
         p->id = NULL_TREE;
     }
-	else
-		printf("Not Enough Memory in add_reg()\n");
+    else
+        printf("Not Enough Memory in add_reg()\n");
 
     return p;
 }
@@ -552,11 +487,11 @@ int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, line
 {
     if ( head == NULL )
     {
-		//printf("Head is NULL in reg_init()\n");
+        //printf("Head is NULL in reg_init()\n");
         return -1;
     }
 
-	struct reg_node *p, *pn;
+    struct reg_node *p, *pn;
 
     p = head;
 
@@ -564,22 +499,22 @@ int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, line
 
     while ( p )
     {
-		id_t = check_lval (p->id, LVAL_REG, curr_spec);
+        id_t = check_lval (p->id, LVAL_REG, curr_spec);
 
-		id_t = build_stmt (ASSIGN_STMT, line_no, id_t,
-				implicit_conversion (id_t, p->value) );
+        id_t = build_stmt (ASSIGN_STMT, line_no, id_t,
+                implicit_conversion (id_t, p->value) );
 
-		id_t = build_stmt (INITIAL_BLOCK, line_no, id_t);
-        
+        id_t = build_stmt (INITIAL_BLOCK, line_no, id_t);
+
         BLOCK_BODY (curr_module) = tree_cons (id_t,
-			(tree)INITIAL_CODE, BLOCK_BODY (curr_module));
+            (tree)INITIAL_CODE, BLOCK_BODY (curr_module));
 
         //printf("Memory free at %x\n", p);
         pn = p->next;
         free ( p );
         p = pn;
-	}
+    }
 
-	return 0;
+    return 0;
 }
 
