@@ -46,24 +46,17 @@ tree make_tmp_decl(tree lval);
 void free_tmp_decl(tree tmp);
 
 
-struct port_node
-{
-    tree id;
-    struct port_node *next;
-};
-
-struct port_node *add_port (struct port_node *head);
-int make_port_decl (struct port_node *head, tree current_spec);
-
-
 struct reg_node
 {
     tree id;
-    tree value;
+    tree value; // initial
     struct reg_node *next;
 };
 
-struct reg_node *add_reg (struct reg_node *head);
+struct reg_node *add_port (struct reg_node *head, tree ident, tree value);
+int make_port_decl (struct reg_node *head, tree current_spec);
+
+struct reg_node *add_reg (struct reg_node *head, tree ident, tree value);
 int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, lineno_t line_no);
 
 #endif				// DECL_H

@@ -410,16 +410,17 @@ void init_decl()
  **************************************************************
  */
 
-struct port_node *add_port (struct port_node *head)
+struct reg_node *add_port (struct reg_node *head, tree ident, tree value)
 {
-    struct port_node *p;
+    struct reg_node *p;
 
-    p = (struct port_node *) malloc ( sizeof (struct port_node) );
+    p = (struct reg_node *) malloc ( sizeof (struct reg_node) );
     if ( p )
     {
         //printf("Memory allocated at: %x\n",p);
         p->next = head;
-        p->id = NULL_TREE;
+        p->id = ident;
+        p->value = value;
     }
     else
         printf("Not Enough Memory in add_port()\n");
@@ -427,11 +428,12 @@ struct port_node *add_port (struct port_node *head)
     return p;
 }
 
-int make_port_decl (struct port_node *head, tree current_spec)
+int make_port_decl (struct reg_node *head, tree current_spec)
 {
     int n = 0 ;
 
-    struct port_node *p;
+    struct reg_node *p, *t;
+    t = head;
 
     if ( head == NULL )
     {
@@ -442,13 +444,13 @@ int make_port_decl (struct port_node *head, tree current_spec)
     tree decl_t;
     tree curr_spec_t;
 
-    while ( head )
+    while(t)
     {
-        p = head;
-        head = p->next;
+        p = t;
+        t = p->next;
         decl_t = make_decl (check_port (p->id), current_spec, NULL_TREE, NULL_TREE);
         //printf("Memory free at %x\n", p);
-        free (p);
+        //free (p);
         n++;
         BLOCK_PORTS (current_scope) =
             chainon (decl_t, BLOCK_PORTS (current_scope));
@@ -465,7 +467,7 @@ int make_port_decl (struct port_node *head, tree current_spec)
  *
  **************************************************************
  */
-struct reg_node *add_reg (struct reg_node *head)
+struct reg_node *add_reg (struct reg_node *head, tree ident, tree value)
 {
     struct reg_node *p;
 
@@ -474,7 +476,8 @@ struct reg_node *add_reg (struct reg_node *head)
     {
         //printf("Memory allocated at: %x\n",p);
         p->next = head;
-        p->id = NULL_TREE;
+        p->id = ident;
+        p->value = value;
     }
     else
         printf("Not Enough Memory in add_reg()\n");
@@ -499,6 +502,7 @@ int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, line
 
     while ( p )
     {
+        if (p->value) {
         id_t = check_lval (p->id, LVAL_REG, curr_spec);
 
         id_t = build_stmt (ASSIGN_STMT, line_no, id_t,
@@ -508,7 +512,7 @@ int make_reg_init (struct reg_node *head, tree curr_module, tree curr_spec, line
 
         BLOCK_BODY (curr_module) = tree_cons (id_t,
             (tree)INITIAL_CODE, BLOCK_BODY (curr_module));
-
+        }
         //printf("Memory free at %x\n", p);
         pn = p->next;
         free ( p );

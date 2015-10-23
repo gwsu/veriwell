@@ -117,7 +117,7 @@ int in_sensitive_wildcard = 0;
 tree sensitive_list_t;
 
 
-struct port_node *port_decl_t;
+struct reg_node *port_decl_t;
 struct reg_node *reg_init_t;
 
 void init_parse()
@@ -591,12 +591,14 @@ list_of_port_declarations
 		{ $$ = $2;
 		  MODULE_PORT_LIST (current_module) = $$;
 		  make_port_decl (port_decl_t, current_spec);
+		  make_reg_init (port_decl_t, current_module, current_spec, stmt_lineno);
 		  port_decl_t = NULL;
 		}
 	| list_of_port_declarations port_spec list_of_port_identifier
 		{ $$ = chainon ($3, $1);
 		  MODULE_PORT_LIST (current_module) = $$;
 		  make_port_decl (port_decl_t, current_spec);
+		  make_reg_init (port_decl_t, current_module, current_spec, stmt_lineno);
 		  port_decl_t = NULL;
 		}
 	| list_of_port_declarations ',' error
@@ -615,8 +617,13 @@ list_of_port_ident
 		{ set_decl ($1, $1);  /* point to itself to mark as port */
 		  $$ = build_tree_list ($1, NULL_TREE);
 
-		  port_decl_t = add_port (port_decl_t);
-		  port_decl_t->id = $1;
+		  port_decl_t = add_port (port_decl_t, $1, NULL);
+		}
+	| IDENTIFIER '=' constant_expression list_of_delimit
+		{ set_decl ($1, $1);
+		  $$ = build_tree_list ($1, NULL_TREE);
+
+		  port_decl_t = add_port (port_decl_t, $1, $3);
 		}
 	| error
 	;
@@ -1368,9 +1375,7 @@ reg_decl_identifier
 		}
 	| IDENTIFIER '=' constant_expression
 		{ $$ = make_decl (check_reg ($1), current_spec, NULL_TREE, NULL_TREE);
-          reg_init_t = add_reg(reg_init_t);
-          reg_init_t->id = $1;
-          reg_init_t->value = $3;
+		  reg_init_t = add_reg(reg_init_t, $1, $3);
         }
 	;
 
