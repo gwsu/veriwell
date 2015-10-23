@@ -326,7 +326,7 @@ void init_parse()
 %type	<ttype>	parameter_declaration list_of_param_declaration_2001 parameter_declaration_2001
 %type	<ttype>	list_of_param_assignments
 %type	<ttype>	param_assignment
-%type	<ttype>	setspec setnetspec static_declaration port_declaration port_spec
+%type	<ttype>	setspec setnetspec static_declaration port_declaration port_spec port_spec_t
 %type	<ttype>	port_decl_identifiers
 %type	<ttype>	reg_spec event_spec reg_decl_identifiers reg_decl_identifier
 %type	<ttype> real_spec paratype
@@ -1148,29 +1148,29 @@ port_declaration
 /* If inside a module, ports are nets by default, so make them so.  Inside
    of a task or function, ports are REGs. */
 port_spec
-	: INPUT xrange
-		{ if (in_tf)
-		    $$ = current_spec = make_reg_spec ($2);
-		  else
-		    $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
-		  PORT_INPUT_ATTR ($$) = 1;
+	: INPUT port_spec_t //xrange
+		{ //if (in_tf)
+		  //  $$ = current_spec = make_reg_spec ($2);
+		  //else
+		  //  $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
+		  PORT_INPUT_ATTR ($2) = 1;
 		}
-	| OUTPUT xrange
+	| OUTPUT port_spec_t //xrange
 		{ function_error;
-		  if (in_tf)
-		    $$ = current_spec = make_reg_spec ($2);
-		  else
-		    $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
-		  PORT_OUTPUT_ATTR ($$) = 1;
+		  //if (in_tf)
+		  //  $$ = current_spec = make_reg_spec ($2);
+		  //else
+		  //  $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
+		  PORT_OUTPUT_ATTR ($2) = 1;
 		}
-	| INOUT xrange
+	| INOUT port_spec_t //xrange
 		{ function_error;
-		  if (in_tf)
-		    $$ = current_spec = make_reg_spec ($2);
-		  else
-		    $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
-		  PORT_INPUT_ATTR ($$) = 1;
-		  PORT_OUTPUT_ATTR ($$) = 1;
+		  //if (in_tf)
+		  //  $$ = current_spec = make_reg_spec ($2);
+		  //else
+		  //  $$ = current_spec = make_net_spec (default_net_type, $2, NULL_TREE);
+		  PORT_INPUT_ATTR ($2) = 1;
+		  PORT_OUTPUT_ATTR ($2) = 1;
 		}
 	;
 
@@ -1188,13 +1188,25 @@ port_decl_identifiers
 	| port_decl_identifiers ',' error
 	;
 
+port_spec_t
+	: xrange
+		{ //function_error;
+		  $$ = current_spec = make_net_spec (default_net_type, $1, NULL_TREE);
+		  if (in_tf)
+		      $$ = current_spec = make_reg_spec ($1);
+		}
+	| reg_spec
+	| real_spec
+	| net_spec
+    ;
+
 reg_spec
 	: REG xrange
 		{ $$ = current_spec = make_reg_spec ($2); }
-	| INTEGER xrange
-		{ if (!$2)
-		    syn_warning ("Integer Range");
-		  $$ = current_spec = make_integer_spec ($2);
+	| INTEGER //xrange
+		{ //if (!$2)
+		  //  syn_warning ("Integer Range");
+		  $$ = current_spec = make_integer_spec (NULL_TREE);
 		}
 	| TIME xrange
 		{ syn_warning ("TIME");
