@@ -1498,6 +1498,7 @@ void start_identifier_warnings(void);
 void set_all_list_values(tree, tree);
 void init_tree_1(void);
 
+tree del_node (tree *head, char *ident);
 // private methods
 
 #ifdef TREE_C

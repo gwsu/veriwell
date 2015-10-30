@@ -1782,7 +1782,7 @@ void pass3_node_tail(tree node, tree label)
 
         case (INSTANCE_IN_GENERATE):
         if (!pass3_again) break;
-        { tree prep;
+        {
         t = STMT_BODY(node);
         if (TREE_CODE(t) == INSTANCE_NODE && !UDP_ATTR(t)) {
         tmp_tree = module_of(current_scope);
@@ -1792,25 +1792,7 @@ void pass3_node_tail(tree node, tree label)
 //  MODULE_NAME(tmp_tree), IDENT(INSTANCE_NAME(t)), IDENT(INSTANCE_MODULE_NAME(t)), INSTANCE_BLOCK(t) );
 
         // patch for multi-module in one file
-        // delete a node
-        for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) {
-            //t2 = TREE_CHAIN(t1);
-            //if (!t2) break;
-            if (strcmp(MODULE_NAME(t1), IDENT(INSTANCE_MODULE_NAME(t))) == 0) {
-            top_level = TREE_CHAIN(t1);
-            } else
-            break;
-        }
-        prep = top_level;
-        for (t1 = TREE_CHAIN(top_level); t1; t1 = TREE_CHAIN(t1)) {
-            //t2 = TREE_CHAIN(t1);
-            //if (!t2) break;
-            if (strcmp(MODULE_NAME(t1), IDENT(INSTANCE_MODULE_NAME(t))) == 0) {
-            TREE_CHAIN(prep) = TREE_CHAIN(t1);
-            //break;
-            } else
-            prep = t1;
-        }
+        del_node (&top_level, IDENT(INSTANCE_MODULE_NAME(t)) );
 //for (t1 = top_level; t1; t1 = TREE_CHAIN(t1)) printf("top3 ... %s\n", MODULE_NAME(t1));
         //set_scope(tmp_tree);
         do_instantiation(tmp_tree);
@@ -2151,7 +2133,7 @@ void connect_instances(tree module)
 	}
 }
 
-void pass3_tree(tree node)
+void pass3_tree(tree node, char *source_first)
 {
     tree t;
     extern int pass2_init_decl_again;
@@ -2165,6 +2147,27 @@ void pass3_tree(tree node)
     finish_scb = BuildSCB(finish_stmt, NOLIST);
     dump = build_stmt(DUMP_STMT, NULL);
     dummy_return = build_stmt(DUMMY_RETURN_STMT, NULL);
+
+    // move top-module to 1st position
+    if (TREE_CHAIN(top_level)) { // skip if only 1
+        // delete '.v'
+        if (strchr(source_first, '.')) {
+        int i = strlen(source_first) - 1;
+        while (*(source_first + i) != '.') i--;
+
+        *(source_first + i) = '\0';
+        }
+        // delete dir name
+        while (strchr(source_first, '/')) source_first++;
+
+        t = del_node (&top_level, source_first);
+        if (t) {
+        TREE_CHAIN(t) = top_level;
+        top_level = t;
+        } else
+	    warning("Top FILE should be 1st place in the args, and the SAME as module name !\n",
+          NULL, NULL);
+    }
 
     // patch for IN_GENERATE_INSTANCE
     for (t = top_level; t; t = TREE_CHAIN(t)) {

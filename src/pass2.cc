@@ -1026,7 +1026,7 @@ void build_hierarchy()
 //      initialize_decls (t);
 	}
     }
-    top_level = nreverse(top_level);
+    //top_level = nreverse(top_level);
     /* Do this after all top-levels are resolved so that hierarchical defparams
        can be accurately located */
     //for (t = top_level; t; t = TREE_CHAIN(t))

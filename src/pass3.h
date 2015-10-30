@@ -64,7 +64,7 @@ void pass3_event_stmt(tree node);
 void pass3_node(tree node);
 void pass3_node_tail(tree node, tree label);
 void connect_instances(tree module);
-void pass3_tree(tree node);
+void pass3_tree(tree node, char *source_first);
 void pass3_interactive(tree node);
 void init_pass3(void);
 void adjust_nbits(nbits_t nbits, tree * tree_addr, tree * code_base);

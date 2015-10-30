@@ -851,7 +851,7 @@ void PhaseII()
 
 void PhaseIII()
 {
-    pass3_tree(top_level);
+    pass3_tree(top_level, source_first->name);
     /*
      * allocate extra size for sysfunctions
      * - mdh ??? doesn't appear as easy as this

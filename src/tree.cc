@@ -1120,6 +1120,30 @@ build_cont_assign(tree lval, tree rval, lineno_t lineno, tree delay,
 }
 
 
+tree del_node (tree *head, char *ident)
+{
+    tree  t1, prep;
+    tree  t2 = NULL_TREE;
+
+    // if node be in the ahead position
+    for (t1 = *head; t1; t1 = TREE_CHAIN(t1)) {
+        if (strcmp(MODULE_NAME(t1), ident) == 0) {
+        *head = TREE_CHAIN(t1);
+        t2 = t1;
+        } else
+        break;
+    }
+    prep = *head;
+    for (t1 = TREE_CHAIN(prep); t1; t1 = TREE_CHAIN(t1)) {
+        if (strcmp(MODULE_NAME(t1), ident) == 0) {
+        TREE_CHAIN(prep) = TREE_CHAIN(t1);
+        t2 = t1;
+        } else
+        prep = t1;
+    }
+
+    return t2;
+}
 
 /************************************************************************
  *
