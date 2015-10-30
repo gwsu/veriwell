@@ -2149,11 +2149,13 @@ task_enable
 		  function_error;
 		  $$ = build_stmt (TASK_STMT, lineno, IDENTIFIER_POINTER ($1), NULL_TREE);
 		  HIERARCHICAL_ATTR ($$) = HIERARCHICAL_ATTR ($1);
+		  $$ = build_stmt (DELAY_STMT, lineno, $$, build_int_cst(0));
 		}
 	| identifier '(' expression_clist rp sc
 		{ syn_warning ("task enable");
 		  $$ = build_stmt (TASK_STMT, lineno, IDENTIFIER_POINTER ($1), nreverse ($3));
 		  HIERARCHICAL_ATTR ($$) = HIERARCHICAL_ATTR ($1);
+		  $$ = build_stmt (DELAY_STMT, lineno, $$, build_int_cst(0));
 		}
 	;
 
