@@ -117,7 +117,7 @@ void init()
     time_t t = time(NULL);
 
     /* Print out our header */
-    printf_V("\n\n%s version %s, \n", VERIWELL, VERSION );
+    printf_V("\n\n%s %s, \n", VERIWELL, VERSION );
     printf_V( copyright );
     printf_V(veriuser_version_str);
 
@@ -775,66 +775,70 @@ int moreinput(char *infile)
 
 void CmdlineHelp()
 {
-    printf( "'VeriWell' is a Verilog simulator supporting the IEEE 1364-1995 standard.\n\n" );
+    printf( "\n%s, a Verilog simulator supporting the IEEE 1364-1995/2001 standard.\n\n", VERIWELL);
     printf("Usage: veriwell [options] <file1> [<file2>...]\n\n");
     printf("Options:\n");
-    printf(" -c                      Compile only - do not simulate\n");
-    printf(" -s                      Enter interactive mode before running\n");
-    printf(" -t                      Turn trace on\n");
-    printf(" -f <filename>           Read options from <filename>\n");
-    printf(" -i <filename>           Read commands from <filename>\n");
-    printf(" -l <filename>           Set log file to <filename>\n");
-    printf(" -l nolog                Disable log file\n");
-    printf(" -k <filename>           Set key file to <filename>\n");
-    printf(" -k nokey                Disable key file\n");
-    printf(" -y <directory>          Search directory for module definitions\n");
-    printf(" -?, -h                  This message\n");
-    printf(" +synopsys               Enable Synopsys HDL Compiler(tm) 2.x checking\n");
-    printf(" +mindelays              Use minimum delays\n");
-    printf(" +maxdelays              Use maximum delays\n");
-    printf(" +typdelays              Use typical delays\n");
-    printf(" +define+<macro>=<value> Define macros\n");
-    printf(" +libext+<extension>     Specify library suffix \n");
-    printf(" +incdir+<directory>     Specify include search path\n");
-    printf(" +<name>+<value>         Define plusargs\n");
-    printf(" --help                  This message\n");
-    printf(" --version               Print version\n");
-    printf(" --bindir                Binary install path\n");
-    printf(" --libdir                Library install path\n");
-    printf(" --includedir            Include install path\n");
-    printf(" --cflags                Compiler flags used\n");
-    printf(" --ldflags               Linker flags used\n");
-    printf(" --libs                  Libraries used\n");
-    printf(" All other options are tested for arguments and ignored\n");
-    printf("\nExamples:\n");
+    printf("  -c                      Compile only - do not simulate\n");
+    printf("  -s                      Enter interactive mode before running\n");
+    printf("  -t                      Turn trace on\n");
+    printf("  -f <filename>           Read options from <filename>\n");
+    printf("  -i <filename>           Read commands from <filename>\n");
+    printf("  -l <filename>           Set log file to <filename>\n");
+    printf("  -l nolog                Disable log file\n");
+    printf("  -k <filename>           Set key file to <filename>\n");
+    printf("  -k nokey                Disable key file\n");
+    printf("  -y <directory>          Search directory for module definitions\n");
+    printf("  -?, -h                  This message\n");
+    printf("  +synopsys               Enable Synopsys HDL Compiler(tm) 2.x checking\n");
+    printf("  +mindelays              Use minimum delays\n");
+    printf("  +maxdelays              Use maximum delays\n");
+    printf("  +typdelays              Use typical delays\n");
+    printf("  +define+<macro>=<value> Define macros\n");
+    printf("  +libext+<extension>     Specify library suffix \n");
+    printf("  +incdir+<directory>     Specify include search path\n");
+    printf("  +<name>+<value>         Define plusargs\n");
+    printf("  --help                  This message\n");
+    printf("  --version               Print version\n");
+    printf("  --bindir                Binary install path\n");
+    printf("  --libdir                Library install path\n");
+    printf("  --includedir            Include install path\n");
+    printf("  --cflags                Compiler flags used\n");
+    printf("  --ldflags               Linker flags used\n");
+    printf("  --libs                  Libraries used\n");
+    printf("All other options are tested for arguments and ignored\n\n");
     printf("The following system tasks are supported:\n\n");
 #ifdef HAVE_LXT
-    printf(" $lxt_recordon                        Enable waveform dump\n");
-    printf(" $lxt_recordoff                       Disable waveform dump\n");
-    printf(" $lxt_recordclose                     End waveform dump\n");
-    printf(" $lxt_recordfile filename options     Set filename and options\n");
-    printf(" $lxt_recordsetup options             Set options\n");
-    printf(" $lxt_recordvars options              Start waveform dump\n\n");
+    printf("  $lxt_recordon                        Enable waveform dump\n");
+    printf("  $lxt_recordoff                       Disable waveform dump\n");
+    printf("  $lxt_recordclose                     End waveform dump\n");
+    printf("  $lxt_recordfile filename options     Set filename and options\n");
+    printf("  $lxt_recordsetup options             Set options\n");
+    printf("  $lxt_recordvars options              Start waveform dump\n\n");
 #endif
 #ifdef HAVE_LXT2
-    printf(" $lxt2_recordon                        Enable waveform dump\n");
-    printf(" $lxt2_recordoff                       Disable waveform dump\n");
-    printf(" $lxt2_recordclose                     End waveform dump\n");
-    printf(" $lxt2_recordfile filename options     Set filename and options\n");
-    printf(" $lxt2_recordsetup options             Set options\n");
-    printf(" $lxt2_recordvars options              Start waveform dump\n\n");
+    printf("  $lxt2_recordon                       Enable waveform dump\n");
+    printf("  $lxt2_recordoff                      Disable waveform dump\n");
+    printf("  $lxt2_recordclose                    End waveform dump\n");
+    printf("  $lxt2_recordfile filename options    Set filename and options\n");
+    printf("  $lxt2_recordsetup options            Set options\n");
+    printf("  $lxt2_recordvars options             Start waveform dump\n\n");
 #endif
 #if defined(HAVE_LXT) || defined(HAVE_LXT2)
     printf("Lxt Options:\n");
-    printf("   incsize=<file_size>  Specify incremental file size in bytes\n");
-    printf("   space                optimize for space\n");
-    printf("   speed                optimize for speed\n");
-    printf("   sequence             Record 0 time signal changes\n");
-    printf("   nosequence           Do not record 0 time signal changes\n");
-    printf("   design=<name>        Specify design name\n");
-    printf("   depth=<depth>        Specify extraction depth\n");
+    printf("  incsize=<file_size>  Specify incremental file size in bytes\n");
+    printf("  space                optimize for space\n");
+    printf("  speed                optimize for speed\n");
+    printf("  sequence             Record 0 time signal changes\n");
+    printf("  nosequence           Do not record 0 time signal changes\n");
+    printf("  design=<name>        Specify design name\n");
+    printf("  depth=<depth>        Specify extraction depth\n");
 #endif
-    printf("\nReport bugs at <http://sourceforge.net/projects/veriwell>\n");
+    printf("\nOriginate in <http://sourceforge.net/projects/veriwell>\n");
+    printf("\n     fork to <https://github.com/balanx/veriwell>\n");
+    printf("\ne.g.\n");
+    printf("  veriwell  a.v  b.v  c.v\n");
+    printf("  veriwell  tb.v  +libext+.v  -y dir1  -y dir2\n");
+    printf("  veriwell  -f  sim.f\n");
 }
 
 /* Parse the input files and generate a syntax tree */
@@ -935,7 +939,7 @@ void finish()
 {
     broadcast_tf(reason_finish);
     printf_V("\nNormal exit\n");
-    printf_V("Thank you for using %s\n", VERIWELL);
+    printf_V("Thank you for using %s ( https://github.com/balanx/veriwell/ )\n", VERIWELL);
     shell_exit(0);
 }
 
